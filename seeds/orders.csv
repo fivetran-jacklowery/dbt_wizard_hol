@@ -1,4 +1,4 @@
-order_id,customer_id,order_date,status,shipping_address_state,shipping_address_city,promo_code,discount_cents
+order_id,customer_id,order_date,order_status,shipping_address_state,shipping_address_city,promo_code,discount_cents
 1,1,2022-02-10,completed,CA,Los Angeles,,0
 2,3,2022-02-18,completed,TX,Austin,SPRING10,500
 3,5,2022-03-15,completed,WA,Seattle,,0
