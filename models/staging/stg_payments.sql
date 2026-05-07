@@ -1,6 +1,6 @@
 with source as (
 
-    select * from {{ ref('payments') }}
+    select * from {{ source('raw', 'payments') }}
 
 ),
 
