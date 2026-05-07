@@ -1,0 +1,61 @@
+order_id,customer_id,order_date,status,shipping_address_state,shipping_address_city,promo_code,discount_cents
+1,1,2022-02-10,completed,CA,Los Angeles,,0
+2,3,2022-02-18,completed,TX,Austin,SPRING10,500
+3,5,2022-03-15,completed,WA,Seattle,,0
+4,2,2022-03-22,completed,NY,New York,WELCOME15,750
+5,7,2022-04-12,completed,IL,Chicago,,0
+6,1,2022-04-25,completed,CA,Los Angeles,,0
+7,4,2022-05-03,completed,FL,Miami,SUMMER20,1000
+8,8,2022-05-18,completed,CA,San Francisco,,0
+9,6,2022-06-01,completed,CO,Denver,,0
+10,10,2022-06-14,completed,TX,Dallas,JUNE10,450
+11,2,2022-06-28,completed,NY,New York,,0
+12,9,2022-07-10,completed,NY,Brooklyn,,0
+13,3,2022-07-22,completed,TX,Austin,,0
+14,11,2022-08-05,completed,AZ,Phoenix,FALL15,800
+15,1,2022-08-19,completed,CA,Los Angeles,,0
+16,13,2022-09-02,completed,NC,Charlotte,,0
+17,5,2022-09-15,completed,WA,Seattle,SEPT10,600
+18,14,2022-09-28,completed,GA,Atlanta,,0
+19,7,2022-10-11,completed,IL,Chicago,,0
+20,15,2022-10-24,completed,MA,Boston,,0
+21,2,2022-11-06,completed,NY,New York,BFRIDAY25,2500
+22,16,2022-11-19,completed,NV,Las Vegas,,0
+23,8,2022-12-02,completed,CA,San Francisco,HOLIDAY20,1500
+24,1,2022-12-15,completed,CA,Los Angeles,,0
+25,17,2022-12-28,completed,WA,Bellevue,,0
+26,19,2023-01-10,completed,MN,Minneapolis,NEW23,1000
+27,3,2023-01-23,completed,TX,Austin,,0
+28,20,2023-02-05,completed,OH,Columbus,,0
+29,21,2023-02-18,completed,PA,Philadelphia,,0
+30,4,2023-03-03,completed,FL,Miami,SPRING23,700
+31,22,2023-03-16,completed,MI,Detroit,,0
+32,10,2023-03-29,completed,TX,Dallas,,0
+33,5,2023-04-11,completed,WA,Seattle,,0
+34,23,2023-04-24,completed,TN,Nashville,,0
+35,25,2023-05-07,completed,IN,Indianapolis,,0
+36,11,2023-05-20,completed,AZ,Phoenix,MAY10,400
+37,1,2023-06-02,completed,CA,Los Angeles,,0
+38,26,2023-06-15,completed,KY,Louisville,,0
+39,2,2023-06-28,completed,NY,New York,SUMMER23,1200
+40,27,2023-07-11,completed,OK,Oklahoma City,,0
+41,13,2023-07-24,completed,NC,Charlotte,,0
+42,28,2023-08-06,completed,CT,Hartford,,0
+43,7,2023-08-19,completed,IL,Chicago,,0
+44,29,2023-09-01,completed,UT,Salt Lake City,,0
+45,3,2023-09-14,completed,TX,Austin,FALL23,900
+46,14,2023-09-27,completed,GA,Atlanta,,0
+47,30,2023-10-10,completed,NM,Albuquerque,,0
+48,1,2023-10-23,completed,CA,Los Angeles,OCT15,1500
+49,8,2023-11-05,completed,CA,San Francisco,,0
+50,2,2023-11-18,completed,NY,New York,BFRIDAY30,3000
+51,15,2023-12-01,completed,MA,Boston,,0
+52,17,2023-12-14,completed,WA,Bellevue,,0
+53,19,2023-12-27,completed,MN,Minneapolis,HOLIDAY23,2000
+54,5,2024-01-09,completed,WA,Seattle,,0
+55,20,2024-01-22,completed,OH,Columbus,,0
+56,22,2024-02-04,completed,MI,Detroit,,0
+57,10,2024-02-17,completed,TX,Dallas,,0
+58,3,2024-03-01,returned,TX,Austin,,0
+59,1,2024-03-14,completed,CA,Los Angeles,,0
+60,24,2024-03-27,pending,MO,St. Louis,,0

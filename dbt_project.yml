@@ -1,16 +1,8 @@
-
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
 name: 'dbt_wizard_hol'
 version: '1.0.0'
 
-# This setting configures which "profile" dbt uses for this project.
 profile: 'dbt_hands_on_lab_profile'
 
-# These configurations specify where dbt should look for different types of files.
-# The `model-paths` config, for example, states that models in this project can be
-# found in the "models/" directory. You probably won't need to change these!
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -18,19 +10,40 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-clean-targets:         # directories to be removed by `dbt clean`
+clean-targets:
   - "target"
   - "dbt_packages"
 
+vars:
+  # Customer tier thresholds (lifetime value in dollars)
+  platinum_threshold: 500
+  gold_threshold: 200
+  silver_threshold: 50
 
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
+  # Lookback window for active customer definition (days)
+  active_customer_days: 365
 
-# In this example config, we tell dbt to build all models in the example/
-# directory as views. These settings can be overridden in the individual model
-# files using the `{{ config(...) }}` macro.
+seeds:
+  dbt_wizard_hol:
+    +schema: raw
+    +column_types:
+      customer_id: integer
+      order_id: integer
+
 models:
   dbt_wizard_hol:
-    # Config indicated by + and applies to all files under models/example/
-    example:
+    staging:
       +materialized: view
+      +schema: staging
+
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+
+    marts:
+      +materialized: table
+      +schema: marts
+      core:
+        +materialized: table
+      marketing:
+        +materialized: table

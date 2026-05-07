@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: agg_customer_cohorts
+    description: >
+      Customer cohort analysis — groups customers by acquisition month and
+      referral source, then computes revenue, conversion, and retention metrics
+      per cohort.
+    columns:
+      - name: cohort_month
+        description: First day of the month in which the cohort was acquired.
+        tests:
+          - not_null
+      - name: referral_source
+        description: Acquisition channel for this cohort slice.
+        tests:
+          - not_null
+      - name: cohort_size
+        description: Total customers in this cohort.
+        tests:
+          - not_null
+      - name: purchase_conversion_rate
+        description: Fraction of cohort customers who placed at least one order.
+        tests:
+          - not_null
