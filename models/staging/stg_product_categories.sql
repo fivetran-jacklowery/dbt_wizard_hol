@@ -1,6 +1,6 @@
 with source as (
 
-    select * from {{ ref('product_categories') }}
+    select * from {{ source('raw', 'product_categories') }}
 
 ),
 
