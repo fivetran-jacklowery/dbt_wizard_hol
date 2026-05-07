@@ -1,0 +1,186 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >
+      Customer dimension — one row per customer. Combines identity, location,
+      and lifetime order metrics. The customer_tier field uses the
+      classify_customer_tier macro and is driven by the platinum/gold/silver
+      project variables.
+    columns:
+      - name: customer_id
+        description: Primary key — unique per customer.
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: Unique customer email address.
+        tests:
+          - unique
+          - not_null
+      - name: customer_tier
+        description: Tier assigned based on lifetime spend (bronze/silver/gold/platinum).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['bronze', 'silver', 'gold', 'platinum']
+      - name: has_ever_ordered
+        description: True if the customer has placed at least one order.
+        tests:
+          - not_null
+
+  - name: dim_products
+    description: >
+      Product dimension — one row per product. Joins the product catalog with
+      category details and rolls up sales performance metrics.
+    columns:
+      - name: product_id
+        description: Primary key — unique per product.
+        tests:
+          - unique
+          - not_null
+      - name: sku
+        description: Stock keeping unit — unique per product.
+        tests:
+          - unique
+          - not_null
+      - name: price_tier
+        description: Budget / mid-range / premium bucketing based on unit price.
+        tests:
+          - accepted_values:
+              values: ['budget', 'mid-range', 'premium']
+
+  - name: fct_orders
+    description: >
+      Order fact table — one row per order. Includes payment, discount,
+      revenue, and margin rolled up from line items.
+    columns:
+      - name: order_id
+        description: Primary key — unique per order.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to dim_customers.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      - name: order_status
+        description: Current order status.
+        tests:
+          - accepted_values:
+              values: ['completed', 'returned', 'pending']
+      - name: order_revenue_dollars
+        description: Total order revenue in dollars (sum of line item totals).
+        tests:
+          - not_null
+
+  - name: fct_order_items
+    description: >
+      Order item fact table — one row per line item. Grain is order_item_id.
+      Includes enriched product, category, and margin data denormalized from
+      intermediate models.
+    columns:
+      - name: order_item_id
+        description: Primary key — unique per order line item.
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: Foreign key to fct_orders.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_id
+      - name: line_total_dollars
+        description: Revenue for this line item in dollars.
+        tests:
+          - not_null
+
+  - name: fct_payments
+    description: >
+      Payment fact table — one row per payment transaction. Each order has
+      at most one payment record in this dataset.
+    columns:
+      - name: payment_id
+        description: Primary key — unique per payment.
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: Foreign key to fct_orders.
+        tests:
+          - not_null
+      - name: payment_status
+        description: Final status of the payment.
+        tests:
+          - accepted_values:
+              values: ['success', 'refunded', 'pending']
+
+  - name: agg_daily_revenue
+    description: >
+      Daily aggregated revenue and margin. Includes 7-day rolling average
+      and cumulative revenue computed with window functions.
+    columns:
+      - name: order_date
+        description: Primary key — unique per calendar day.
+        tests:
+          - unique
+          - not_null
+      - name: daily_revenue_dollars
+        description: Total completed order revenue for the day.
+        tests:
+          - not_null
+
+  - name: agg_monthly_revenue
+    description: >
+      Monthly revenue rollup with month-over-month growth rate. Derived from
+      int_daily_revenue.
+    columns:
+      - name: order_month
+        description: First day of the calendar month (primary key).
+        tests:
+          - unique
+          - not_null
+
+  - name: agg_product_performance
+    description: >
+      Product performance rankings by revenue, volume, and margin. Includes
+      within-department rankings and revenue share percentages.
+    columns:
+      - name: product_id
+        description: Primary key — unique per product.
+        tests:
+          - unique
+          - not_null
+
+  - name: customer_lifetime_value
+    description: >
+      Customer CLV model — combines actual spend history with a simple
+      12-month revenue projection based on order velocity.
+    columns:
+      - name: customer_id
+        description: Primary key — one row per customer who has ordered.
+        tests:
+          - unique
+          - not_null
+
+  - name: order_margin_analysis
+    description: >
+      Order-level margin analysis with margin banding and net margin after
+      discounts. Excludes pending orders.
+    columns:
+      - name: order_id
+        description: Primary key — unique per order.
+        tests:
+          - unique
+          - not_null
+      - name: margin_band
+        description: High / medium / low / negative bucketing based on order margin %.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['high', 'medium', 'low', 'negative']

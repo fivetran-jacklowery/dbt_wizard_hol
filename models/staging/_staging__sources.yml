@@ -1,0 +1,21 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Raw seed data loaded into the warehouse. Represents the landing zone for
+      e-commerce transactional data before any transformation.
+    schema: "{{ target.schema }}_raw"
+    tables:
+      - name: customers
+        description: One row per registered customer.
+      - name: orders
+        description: One row per customer order.
+      - name: order_items
+        description: One row per line item within an order.
+      - name: products
+        description: Product catalog with pricing and cost.
+      - name: product_categories
+        description: Lookup table mapping products to categories and departments.
+      - name: payments
+        description: One row per payment transaction linked to an order.
