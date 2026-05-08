@@ -1,10 +1,10 @@
--- Singular test: all completed orders must have positive revenue.
--- Returns rows that violate this expectation — the test passes when 0 rows are returned.
+-- Singular test: all completed orders must have positive line-item revenue.
+-- Returns rows that violate this expectation — test passes when 0 rows are returned.
 
 select
     order_id,
     order_status,
-    order_revenue_dollars
+    order_revenue
 from {{ ref('fct_orders') }}
 where order_status = 'completed'
-  and order_revenue_dollars <= 0
+  and order_revenue <= 0

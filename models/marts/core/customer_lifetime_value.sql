@@ -5,7 +5,7 @@
 }}
 
 -- Customer Lifetime Value (CLV) model.
--- Combines actual spend history with projected future value (simple linear projection).
+-- Combines actual spend history with a simple linear 12-month projection.
 
 with dim_customers as (
 
@@ -20,7 +20,8 @@ clv as (
         full_name,
         email,
         state,
-        referral_source,
+        region,
+        customer_type,
         customer_tier,
         is_active,
 
@@ -29,42 +30,30 @@ clv as (
         first_order_date,
         last_order_date,
         customer_tenure_days,
-        lifetime_revenue_dollars,
-        lifetime_margin_dollars,
-        avg_order_value_dollars,
+        lifetime_revenue,
+        avg_order_value,
 
-        -- Velocity: orders per month (avoid div/0 for single-purchase customers)
+        -- Velocity: orders per month
         {{ safe_divide(
             'total_orders',
             'greatest(customer_tenure_days, 1) / 30.0'
-        ) }}                                                as orders_per_month,
+        ) }}                                                    as orders_per_month,
 
-        -- Simple 12-month projected revenue
-        -- (avg order value × orders per month × 12)
+        -- Simple 12-month projected revenue (avg order value × monthly velocity × 12)
         round(
-            avg_order_value_dollars
+            avg_order_value
             * {{ safe_divide(
                     'total_orders',
                     'greatest(customer_tenure_days, 1) / 30.0'
                 ) }}
             * 12,
             2
-        )                                                    as projected_12mo_revenue,
+        )                                                       as projected_12mo_revenue,
 
-        -- Margin on projected revenue
-        round(
-            avg_order_value_dollars
-            * {{ safe_divide(
-                    'total_orders',
-                    'greatest(customer_tenure_days, 1) / 30.0'
-                ) }}
-            * 12
-            * {{ safe_divide('lifetime_margin_dollars', 'greatest(lifetime_revenue_dollars, 1)') }},
-            2
-        )                                                    as projected_12mo_margin,
-
-        -- Promo usage rate
-        {{ safe_divide('promo_order_count', 'greatest(total_orders, 1)') }} as promo_usage_rate,
+        -- Support profile
+        total_support_tickets,
+        open_tickets,
+        avg_resolution_hours,
 
         return_rate
 
@@ -74,4 +63,4 @@ clv as (
 )
 
 select * from clv
-order by lifetime_revenue_dollars desc
+order by lifetime_revenue desc

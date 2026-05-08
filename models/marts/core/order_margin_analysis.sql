@@ -4,8 +4,8 @@
     )
 }}
 
--- Order-level margin analysis — flags high and low margin orders.
--- Useful for pricing review and promotional effectiveness analysis.
+-- Order-level discount and revenue analysis.
+-- Since we have no cost data in this schema, margin banding uses discount depth.
 
 with orders as (
 
@@ -21,42 +21,46 @@ final as (
         order_date,
         order_month,
         order_status,
-        payment_method,
+        shipping_method,
 
-        -- Revenue & margin
-        order_revenue_dollars,
-        order_cost_cents,
-        order_margin_dollars,
-        order_margin_pct,
+        -- Revenue
+        order_revenue,
+        order_revenue_after_discount,
+        total_amount,
+        tax_amount,
+        shipping_cost,
 
         -- Discount impact
-        has_promo,
-        promo_code,
-        discount_dollars,
-        {{ safe_divide('discount_dollars', 'order_revenue_dollars') }} as discount_pct,
+        order_revenue - order_revenue_after_discount            as total_discount_amount,
+        {{ safe_divide(
+            'order_revenue - order_revenue_after_discount',
+            'order_revenue'
+        ) }}                                                    as discount_pct,
 
-        -- Margin classification
+        -- Discount depth banding
         case
-            when order_margin_pct >= 0.50 then 'high'
-            when order_margin_pct >= 0.30 then 'medium'
-            when order_margin_pct >= 0    then 'low'
-            else 'negative'
-        end                                                  as margin_band,
+            when {{ safe_divide(
+                    'order_revenue - order_revenue_after_discount',
+                    'order_revenue'
+                ) }} = 0                                        then 'no discount'
+            when {{ safe_divide(
+                    'order_revenue - order_revenue_after_discount',
+                    'order_revenue'
+                ) }} < 0.1                                      then 'light (<10%)'
+            when {{ safe_divide(
+                    'order_revenue - order_revenue_after_discount',
+                    'order_revenue'
+                ) }} < 0.2                                      then 'moderate (10–20%)'
+            else                                                     'heavy (20%+)'
+        end                                                     as discount_band,
 
         line_item_count,
         total_quantity,
         is_returned,
-        is_refunded,
-
-        -- Net margin after discount
-        order_margin_dollars - discount_dollars              as net_margin_after_discount,
-        {{ safe_divide(
-            'order_margin_dollars - discount_dollars',
-            'order_revenue_dollars'
-        ) }}                                                as net_margin_pct_after_discount
+        is_cancelled
 
     from orders
-    where order_status != 'pending'
+    where order_status not in ('pending', 'cancelled')
 
 )
 

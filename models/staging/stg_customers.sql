@@ -1,25 +1,31 @@
 with source as (
 
-    select * from {{ source('raw', 'customers') }}
+    select * from {{ source('retail', 'RET_CUSTOMERS') }}
 
 ),
 
 renamed as (
 
     select
-        customer_id,
+        id                                                       as customer_id,
         first_name,
         last_name,
-        first_name || ' ' || last_name                      as full_name,
-        lower(email)                                         as email,
+        first_name || ' ' || last_name                          as full_name,
+        lower(email)                                             as email,
         phone,
-        upper(country)                                       as country,
-        upper(state)                                         as state,
+        address,
         city,
-        cast(signup_date as date)                            as signup_date,
-        lower(referral_source)                               as referral_source
+        upper(state)                                             as state,
+        zip,
+        region,
+        lower(customer_type)                                     as customer_type,
+        created_at,
+        updated_at,
+        _fivetran_deleted                                        as is_deleted,
+        _fivetran_synced                                         as fivetran_synced_at
 
     from source
+    where coalesce(_fivetran_deleted, false) = false
 
 )
 

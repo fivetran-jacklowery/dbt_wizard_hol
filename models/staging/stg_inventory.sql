@@ -1,20 +1,20 @@
 with source as (
 
-    select * from {{ source('retail', 'RET_ORDER_ITEMS') }}
+    select * from {{ source('retail', 'RET_INVENTORY') }}
 
 ),
 
 renamed as (
 
     select
-        id                                                       as order_item_id,
-        order_id,
+        id                                                       as inventory_id,
         product_id,
-        quantity,
-        unit_price,
-        discount_pct,
-        line_total,
-        created_at,
+        warehouse_id,
+        quantity_on_hand,
+        reorder_point,
+        reorder_quantity,
+        last_restocked_at,
+        updated_at,
         _fivetran_deleted                                        as is_deleted,
         _fivetran_synced                                         as fivetran_synced_at
 

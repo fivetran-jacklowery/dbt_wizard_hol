@@ -1,19 +1,19 @@
 with source as (
 
-    select * from {{ source('retail', 'RET_ORDER_ITEMS') }}
+    select * from {{ source('retail', 'RET_PRODUCT_REVIEWS') }}
 
 ),
 
 renamed as (
 
     select
-        id                                                       as order_item_id,
-        order_id,
+        id                                                       as review_id,
         product_id,
-        quantity,
-        unit_price,
-        discount_pct,
-        line_total,
+        customer_id,
+        rating,
+        review_title,
+        review_text,
+        is_verified_purchase,
         created_at,
         _fivetran_deleted                                        as is_deleted,
         _fivetran_synced                                         as fivetran_synced_at

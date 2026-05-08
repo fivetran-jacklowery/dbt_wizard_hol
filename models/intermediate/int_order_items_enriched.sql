@@ -1,5 +1,5 @@
--- Enriches order line items with product and category details.
--- Adds cost, margin, and category context to every line item.
+-- Enriches order line items with product, subcategory, and category details.
+-- Discount-adjusted revenue is computed here for accurate margin analysis.
 
 with order_items as (
 
@@ -10,6 +10,12 @@ with order_items as (
 products as (
 
     select * from {{ ref('stg_products') }}
+
+),
+
+subcategories as (
+
+    select * from {{ ref('stg_product_subcategories') }}
 
 ),
 
@@ -27,40 +33,34 @@ joined as (
         oi.product_id,
         oi.quantity,
 
-        -- Price & revenue
-        oi.unit_price_cents,
-        oi.unit_price_dollars,
-        oi.line_total_cents,
-        oi.line_total_dollars,
+        -- Price & revenue (native dollars)
+        oi.unit_price,
+        oi.discount_pct,
+        oi.line_total                                           as line_revenue,
 
-        -- Cost & margin (from product master)
-        p.unit_cost_cents,
-        p.unit_cost_dollars,
-        oi.quantity * p.unit_cost_cents                     as line_cost_cents,
-        {{ cents_to_dollars('oi.quantity * p.unit_cost_cents') }} as line_cost_dollars,
-        oi.line_total_cents - (oi.quantity * p.unit_cost_cents) as line_margin_cents,
-        {{ cents_to_dollars('oi.line_total_cents - (oi.quantity * p.unit_cost_cents)') }} as line_margin_dollars,
-        {{ safe_divide(
-            'oi.line_total_cents - (oi.quantity * p.unit_cost_cents)',
-            'oi.line_total_cents'
-        ) }}                                                as line_margin_pct,
+        -- Discount-adjusted revenue
+        oi.line_total * (1 - coalesce(oi.discount_pct, 0) / 100.0) as line_revenue_after_discount,
 
         -- Product context
-        p.product_name,
         p.sku,
-        p.is_active                                         as product_is_active,
-        p.margin_pct                                        as product_margin_pct,
+        p.product_name,
+        p.brand,
+        p.unit_price                                            as product_unit_price,
+        p.is_active                                             as product_is_active,
 
-        -- Category context
+        -- Taxonomy context
+        sc.subcategory_id,
+        sc.subcategory_name,
         c.category_id,
-        c.category_name,
-        c.department
+        c.category_name
 
     from order_items oi
     left join products p
         on oi.product_id = p.product_id
+    left join subcategories sc
+        on p.subcategory_id = sc.subcategory_id
     left join categories c
-        on p.category_id = c.category_id
+        on sc.category_id = c.category_id
 
 )
 

@@ -15,20 +15,13 @@ clean-targets:
   - "dbt_packages"
 
 vars:
-  # Customer tier thresholds (lifetime value in dollars)
+  # Customer tier thresholds (lifetime revenue in dollars)
   platinum_threshold: 500
   gold_threshold: 200
   silver_threshold: 50
 
-  # Lookback window for active customer definition (days)
+  # Lookback window for active customer definition (days since last order)
   active_customer_days: 365
-
-seeds:
-  dbt_wizard_hol:
-    +schema: raw
-    +column_types:
-      customer_id: integer
-      order_id: integer
 
 models:
   dbt_wizard_hol:
