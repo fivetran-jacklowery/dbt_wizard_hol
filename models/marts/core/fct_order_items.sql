@@ -5,7 +5,7 @@
 }}
 
 -- Grain: one row per order line item
--- Includes all enriched product, category, and margin data
+-- Includes product, subcategory/category taxonomy, and discount-adjusted revenue
 
 with order_items as (
 
@@ -22,7 +22,7 @@ orders as (
         order_status,
         order_month
 
-    from {{ ref('int_orders_with_payments') }}
+    from {{ ref('int_orders_enriched') }}
 
 ),
 
@@ -33,6 +33,7 @@ final as (
         oi.order_item_id,
         oi.order_id,
         oi.product_id,
+        oi.subcategory_id,
         oi.category_id,
         o.customer_id,
 
@@ -44,25 +45,19 @@ final as (
         -- Product info
         oi.product_name,
         oi.sku,
+        oi.brand,
+        oi.subcategory_name,
         oi.category_name,
-        oi.department,
         oi.product_is_active,
 
         -- Quantity & pricing
         oi.quantity,
-        oi.unit_price_cents,
-        oi.unit_price_dollars,
-        oi.unit_cost_cents,
-        oi.unit_cost_dollars,
+        oi.unit_price,
+        oi.discount_pct,
 
         -- Line totals
-        oi.line_total_cents,
-        oi.line_total_dollars,
-        oi.line_cost_cents,
-        oi.line_cost_dollars,
-        oi.line_margin_cents,
-        oi.line_margin_dollars,
-        oi.line_margin_pct
+        oi.line_revenue,
+        oi.line_revenue_after_discount
 
     from order_items oi
     inner join orders o

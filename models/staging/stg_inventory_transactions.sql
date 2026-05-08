@@ -1,19 +1,19 @@
 with source as (
 
-    select * from {{ source('retail', 'RET_ORDER_ITEMS') }}
+    select * from {{ source('retail', 'RET_INVENTORY_TRANSACTIONS') }}
 
 ),
 
 renamed as (
 
     select
-        id                                                       as order_item_id,
-        order_id,
+        id                                                       as transaction_id,
         product_id,
+        warehouse_id,
+        lower(transaction_type)                                  as transaction_type,
         quantity,
-        unit_price,
-        discount_pct,
-        line_total,
+        reference_id,
+        notes,
         created_at,
         _fivetran_deleted                                        as is_deleted,
         _fivetran_synced                                         as fivetran_synced_at

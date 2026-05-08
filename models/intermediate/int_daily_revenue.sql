@@ -1,9 +1,9 @@
--- Aggregates completed order revenue and margin by day.
+-- Aggregates completed order revenue by day.
 -- Feeds into agg_daily_revenue and agg_monthly_revenue mart models.
 
 with orders as (
 
-    select * from {{ ref('int_orders_with_payments') }}
+    select * from {{ ref('int_orders_enriched') }}
 
 ),
 
@@ -17,9 +17,8 @@ order_totals as (
 
     select
         order_id,
-        sum(line_total_cents)  as order_revenue_cents,
-        sum(line_cost_cents)   as order_cost_cents,
-        sum(line_margin_cents) as order_margin_cents
+        sum(line_revenue)                                       as order_revenue,
+        sum(line_revenue_after_discount)                        as order_revenue_after_discount
 
     from order_items
     group by 1
@@ -30,20 +29,20 @@ daily as (
 
     select
         o.order_date,
-        date_trunc('month', o.order_date)                   as order_month,
-        count(distinct o.order_id)                          as order_count,
-        count(distinct o.customer_id)                       as unique_customers,
-        sum(ot.order_revenue_cents)                         as daily_revenue_cents,
-        {{ cents_to_dollars('sum(ot.order_revenue_cents)') }} as daily_revenue_dollars,
-        sum(ot.order_cost_cents)                            as daily_cost_cents,
-        sum(ot.order_margin_cents)                          as daily_margin_cents,
-        {{ cents_to_dollars('sum(ot.order_margin_cents)') }}  as daily_margin_dollars,
+        date_trunc('month', o.order_date)                       as order_month,
+        count(distinct o.order_id)                              as order_count,
+        count(distinct o.customer_id)                           as unique_customers,
+
+        sum(ot.order_revenue)                                   as daily_revenue,
+        sum(ot.order_revenue_after_discount)                    as daily_revenue_after_discount,
+        sum(o.total_amount)                                     as daily_total_billed,
+
         {{ safe_divide(
-            'sum(ot.order_margin_cents)',
-            'sum(ot.order_revenue_cents)'
-        ) }}                                                as daily_margin_pct,
-        sum(case when o.has_promo then 1 else 0 end)        as promo_order_count,
-        sum(o.discount_cents)                               as total_discount_cents
+            'sum(ot.order_revenue_after_discount)',
+            'sum(ot.order_revenue)'
+        ) }}                                                    as avg_discount_factor,
+
+        count(distinct o.shipping_state)                        as distinct_states
 
     from orders o
     left join order_totals ot

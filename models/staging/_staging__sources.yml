@@ -1,21 +1,47 @@
 version: 2
 
 sources:
-  - name: raw
+  - name: retail
     description: >
-      Raw seed data loaded into the warehouse. Represents the landing zone for
-      e-commerce transactional data before any transformation.
-    schema: "{{ target.schema }}_raw"
+      Fivetran-synced retail data from SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.
+      All tables include _FIVETRAN_DELETED and _FIVETRAN_SYNCED system columns.
+      The physical primary key is CTID_FIVETRAN_ID; the business key is ID on every table.
+    database: SNOWFLAKE_SUMMIT_2026_HOL_DB
+    schema: SF_HOL_2026_RETAIL
+
     tables:
-      - name: customers
-        description: One row per registered customer.
-      - name: orders
-        description: One row per customer order.
-      - name: order_items
-        description: One row per line item within an order.
-      - name: products
-        description: Product catalog with pricing and cost.
-      - name: product_categories
-        description: Lookup table mapping products to categories and departments.
-      - name: payments
-        description: One row per payment transaction linked to an order.
+      - name: RET_CUSTOMERS
+        description: One row per registered customer, including contact info and geographic segmentation.
+
+      - name: RET_ORDERS
+        description: One row per customer order, including status, shipping details, and pre-computed totals.
+
+      - name: RET_ORDER_ITEMS
+        description: One row per line item within an order, including quantity, unit price, and discount.
+
+      - name: RET_PRODUCTS
+        description: Product catalog with SKU, pricing, brand, and active status.
+
+      - name: RET_PRODUCT_CATEGORIES
+        description: Top-level product category lookup table.
+
+      - name: RET_PRODUCT_SUBCATEGORIES
+        description: Product subcategory lookup, each belonging to a parent category.
+
+      - name: RET_PRODUCT_REVIEWS
+        description: Customer product reviews with a 1–5 rating and optional review text.
+
+      - name: RET_INVENTORY
+        description: Current inventory levels per product per warehouse, with reorder thresholds.
+
+      - name: RET_INVENTORY_TRANSACTIONS
+        description: Log of every inventory movement (receipt, sale, adjustment, return) per product per warehouse.
+
+      - name: RET_PROMOTIONS
+        description: Promotional campaigns with discount type, value, date range, and applicable category.
+
+      - name: RET_TICKETS
+        description: Customer support tickets linked to customers and optionally to orders.
+
+      - name: RET_WAREHOUSES
+        description: Warehouse locations with address, capacity, and active status.

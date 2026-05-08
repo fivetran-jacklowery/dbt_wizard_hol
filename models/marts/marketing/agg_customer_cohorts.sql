@@ -5,8 +5,8 @@
     )
 }}
 
--- Customer cohort analysis — groups customers by their acquisition month
--- and tracks aggregate revenue and retention metrics per cohort.
+-- Customer cohort analysis — groups customers by their first-order month
+-- and segments by customer_type. Tracks revenue, retention, and conversion.
 
 with cohorts as (
 
@@ -18,32 +18,33 @@ cohort_summary as (
 
     select
         cohort_month,
-        referral_source,
+        customer_type,
+        region,
 
-        count(distinct customer_id)                         as cohort_size,
+        count(distinct customer_id)                             as cohort_size,
         count(distinct case when first_order_date is not null then customer_id end) as customers_with_orders,
         count(distinct case when is_active_customer then customer_id end) as active_customers,
 
         {{ safe_divide(
             'count(distinct case when first_order_date is not null then customer_id end)',
             'count(distinct customer_id)'
-        ) }}                                                as purchase_conversion_rate,
+        ) }}                                                    as purchase_conversion_rate,
 
         {{ safe_divide(
             'count(distinct case when is_active_customer then customer_id end)',
             'count(distinct case when first_order_date is not null then customer_id end)'
-        ) }}                                                as retention_rate,
+        ) }}                                                    as retention_rate,
 
-        sum(coalesce(lifetime_revenue_dollars, 0))          as cohort_total_revenue,
-        avg(coalesce(lifetime_revenue_dollars, 0))          as cohort_avg_revenue_per_customer,
-        avg(coalesce(avg_order_value_dollars, 0))           as cohort_avg_order_value,
-        avg(coalesce(days_to_first_order, 0))               as avg_days_to_first_order
+        sum(coalesce(lifetime_revenue, 0))                      as cohort_total_revenue,
+        avg(coalesce(lifetime_revenue, 0))                      as cohort_avg_revenue_per_customer,
+        avg(coalesce(avg_order_value, 0))                       as cohort_avg_order_value,
+        avg(coalesce(days_to_first_order, 0))                   as avg_days_to_first_order
 
     from cohorts
     where cohort_month is not null  -- exclude customers who have never ordered
-    group by 1, 2
+    group by 1, 2, 3
 
 )
 
 select * from cohort_summary
-order by cohort_month, referral_source
+order by cohort_month, customer_type, region

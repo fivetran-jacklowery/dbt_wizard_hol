@@ -1,8 +1,15 @@
--- Joins products with their category and computes sales performance metrics.
+-- Joins products to their full taxonomy (subcategory → category)
+-- and assigns a price tier bucket.
 
 with products as (
 
     select * from {{ ref('stg_products') }}
+
+),
+
+subcategories as (
+
+    select * from {{ ref('stg_product_subcategories') }}
 
 ),
 
@@ -16,31 +23,31 @@ joined as (
 
     select
         p.product_id,
-        p.product_name,
         p.sku,
+        p.product_name,
+        p.product_description,
+        p.brand,
+        p.unit_price,
+        p.weight_lbs,
         p.is_active,
-        p.unit_cost_cents,
-        p.unit_cost_dollars,
-        p.unit_price_cents,
-        p.unit_price_dollars,
-        p.unit_margin_cents,
-        p.unit_margin_dollars,
-        p.margin_pct,
 
+        sc.subcategory_id,
+        sc.subcategory_name,
         c.category_id,
         c.category_name,
-        c.department,
 
-        -- Price tier bucketing
+        -- Price tier bucketing (native dollars)
         case
-            when p.unit_price_cents >= 10000 then 'premium'
-            when p.unit_price_cents >= 5000  then 'mid-range'
+            when p.unit_price >= 100 then 'premium'
+            when p.unit_price >= 50  then 'mid-range'
             else 'budget'
-        end as price_tier
+        end                                                     as price_tier
 
     from products p
+    left join subcategories sc
+        on p.subcategory_id = sc.subcategory_id
     left join categories c
-        on p.category_id = c.category_id
+        on sc.category_id = c.category_id
 
 )
 

@@ -1,26 +1,28 @@
 with source as (
 
-    select * from {{ source('raw', 'products') }}
+    select * from {{ source('retail', 'RET_PRODUCTS') }}
 
 ),
 
 renamed as (
 
     select
-        product_id,
-        product_name,
-        category_id,
+        id                                                       as product_id,
         sku,
-        unit_cost_cents,
-        unit_price_cents,
-        {{ cents_to_dollars('unit_cost_cents') }}            as unit_cost_dollars,
-        {{ cents_to_dollars('unit_price_cents') }}           as unit_price_dollars,
-        unit_price_cents - unit_cost_cents                   as unit_margin_cents,
-        {{ cents_to_dollars('unit_price_cents - unit_cost_cents') }} as unit_margin_dollars,
-        {{ safe_divide('unit_price_cents - unit_cost_cents', 'unit_price_cents') }} as margin_pct,
-        cast(is_active as boolean)                           as is_active
+        name                                                     as product_name,
+        description                                              as product_description,
+        subcategory_id,
+        brand,
+        unit_price,
+        weight_lbs,
+        is_active,
+        created_at,
+        updated_at,
+        _fivetran_deleted                                        as is_deleted,
+        _fivetran_synced                                         as fivetran_synced_at
 
     from source
+    where coalesce(_fivetran_deleted, false) = false
 
 )
 

@@ -1,5 +1,5 @@
--- Rolls up order item data to the product level.
--- Produces per-product sales volume, revenue, and margin metrics.
+-- Rolls up order item data to the product level for completed orders.
+-- Produces per-product sales volume and revenue metrics.
 
 with order_items as (
 
@@ -10,7 +10,7 @@ with order_items as (
 orders as (
 
     select order_id, order_status, order_date
-    from {{ ref('int_orders_with_payments') }}
+    from {{ ref('int_orders_enriched') }}
 
 ),
 
@@ -27,31 +27,25 @@ product_sales as (
         oi.product_id,
         oi.product_name,
         oi.sku,
+        oi.brand,
+        oi.subcategory_id,
+        oi.subcategory_name,
         oi.category_id,
         oi.category_name,
-        oi.department,
         oi.product_is_active,
-        p.price_tier                                         as product_price_tier,
+        p.price_tier,
 
         -- Volume
-        count(distinct oi.order_id)                         as orders_containing_product,
-        sum(oi.quantity)                                     as total_units_sold,
+        count(distinct oi.order_id)                             as orders_containing_product,
+        sum(oi.quantity)                                         as total_units_sold,
 
         -- Revenue
-        sum(oi.line_total_cents)                            as total_revenue_cents,
-        {{ cents_to_dollars('sum(oi.line_total_cents)') }}  as total_revenue_dollars,
+        sum(oi.line_revenue)                                     as total_revenue,
+        sum(oi.line_revenue_after_discount)                      as total_revenue_after_discount,
 
-        -- Cost & margin
-        sum(oi.line_cost_cents)                             as total_cost_cents,
-        sum(oi.line_margin_cents)                           as total_margin_cents,
-        {{ cents_to_dollars('sum(oi.line_margin_cents)') }} as total_margin_dollars,
-        {{ safe_divide(
-            'sum(oi.line_margin_cents)',
-            'sum(oi.line_total_cents)'
-        ) }}                                                as blended_margin_pct,
-
+        -- Review context (populated in downstream dim)
         -- Recency
-        max(o.order_date)                                   as last_sold_date
+        max(o.order_date)                                        as last_sold_date
 
     from order_items oi
     inner join orders o
@@ -59,7 +53,7 @@ product_sales as (
     left join products p
         on oi.product_id = p.product_id
     where o.order_status = 'completed'
-    group by 1, 2, 3, 4, 5, 6, 7, 8
+    group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 
 )
 
