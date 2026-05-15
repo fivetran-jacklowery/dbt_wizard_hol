@@ -1,0 +1,13 @@
+CTID_FIVETRAN_ID,ID,NAME,DESCRIPTION,CREATED_AT,UPDATED_AT,_FIVETRAN_DELETED,_FIVETRAN_SYNCED
+TBD_CA_000001,1,Power Tools,Cordless and corded power tools for pros and DIYers,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000002,2,Hand Tools,"Wrenches, pliers, screwdrivers, and manual tools",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000003,3,Plumbing,"Pipes, fittings, faucets, and water management",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000004,4,Electrical,"Wiring, outlets, switches, and lighting",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000005,5,Paint & Stain,"Interior and exterior paint, stains, and coatings",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000006,6,Hardware & Fasteners,"Screws, bolts, nails, anchors, and cabinet hardware",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000007,7,Lumber & Building Materials,"Dimensional lumber, plywood, insulation, and drywall",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000008,8,Heating & Cooling,"HVAC, space heaters, fans, and thermostats",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000009,9,Outdoor & Garden,"Lawn care, garden tools, outdoor lighting, and fencing",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000010,10,Safety & Security,"Smoke detectors, locks, work gloves, and safety gear",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000011,11,Flooring & Tile,"Vinyl, laminate, ceramic tile, and flooring supplies",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
+TBD_CA_000012,12,Kitchen & Bath,"Vanities, sinks, fixtures, and bath accessories",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:07.709 -0700
