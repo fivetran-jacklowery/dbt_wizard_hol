@@ -1,165 +1,142 @@
 ---
 name: scenario-3
-description: Use this skill whenever a user wants to build customer segmentation models, identify high-value customers, create targeted campaign audiences, or analyze purchase behavior by store using dbt Wizard. Triggers on phrases like "scenario 3", "run scenario 3", "targeted campaign", "customer segments", "VIP customers", "high-value customers", "category-loyal", "big spenders", "180-day activity", or any multi-step dbt Wizard workflow involving customers, orders, and categories. This skill walks the user through all 6 prompt steps interactively.
+description: Use this skill when the user is building a customer segmentation model, identifying VIPs or high-value customers, or creating a targeted campaign audience for Marketing using recent purchase behavior by store. Triggers on natural-language phrases like "build a customer segment for Marketing", "who are our VIPs", "find high-value customers by store", "I need a targeted campaign audience", "segment customers by spend and loyalty", "180-day customer activity by store", "identify category-loyal customers", or "build a big-spender segment". Use this skill specifically for the customers × stores × orders × categories segmentation workflow — not for inventory or shipment problems (that is scenario-1), and not for product quality or vendor return-rate work (that is scenario-2).
 ---
 
 # dbt Wizard — High-Value Customer Segmentation
 
-A guided, interactive 6-step workflow for using dbt Wizard to help Marketing identify high-value customers for targeted campaigns — using recent purchase behavior, store context, and category loyalty over a rolling 180-day window.
+A seven-step workflow that turns *"which customers should Marketing target?"* into a reusable activity layer plus a segment model, materialized into the user's dev schema. Two-model design on purpose: the activity layer is testable and reusable so downstream work (churn, RFM, dashboards) does not re-derive the same aggregates from scratch.
 
-The skill starts from a **business problem** ("which customers should Marketing target?") and walks the user through dbt Wizard's discovery, schema, inspection, multi-model creation, and safe-preview capabilities — without ever materializing changes to the warehouse.
+## How to run this skill
 
-This scenario differs from prior ones in two ways:
+For every step:
 
-- **Wider entity surface** — 6 model types (customers, stores, orders, order lines, products, categories) instead of 3–4.
-- **Two-model design** — a reusable activity layer feeds a downstream segment model, so the logic is testable and reusable.
+1. Present the question for dbt Wizard inside a plain fenced code block — no quoting, no decoration, so the user can triple-click and copy or type it off a printed lab sheet.
+2. Always frame the question as *"copy this as written, or rephrase it in your own words"* — give the user the explicit choice between using the canonical version and paraphrasing. Either path is correct; the lab is about the workflow, not the wording.
+3. State briefly what dbt Wizard exercises under the hood.
+4. After dbt Wizard responds, interpret in one or two lines what the user can now do. Do not restate dbt Wizard's output — name the *insight* the user just earned. Then surface the next question in another plain code block, again with the copy-or-rephrase framing.
 
-## How to use this skill
+Never invite the user to "say next," "paste output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order; do not skip ahead.
 
-For each step below:
-
-1. **Show the user the exact prompt** to paste into dbt Wizard (use a blockquote so it's copy-pasteable).
-2. **Explain what dbt Wizard will do** under the hood (which tools/capabilities are exercised).
-3. **Pause** and ask: *"Ready for the next step? Paste your dbt Wizard output here or just say 'next' to continue."*
-4. If the user pastes output, **briefly interpret** what it means for the investigation before advancing.
-5. Do not skip ahead. Run the steps in order.
-
-If the user has not yet installed or configured dbt Wizard, refer them to `references/dbt_wizard_setup.md` before Step 1.
+If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
 
 ---
 
 ## Step 1 — Discovery
 
-Prompt the user to paste this into dbt Wizard:
+Ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-> Find the models related to customers, stores, orders, order lines, products, and categories.
+```
+Find the models related to customers, stores, orders, order lines, products, and categories.
+```
 
-**What this does:** Uses dbt Wizard's `status` and `search` capabilities to surface only the assets needed for customer segmentation. This domain is wider than prior scenarios (6 entity types), so discovery is especially important *before* touching any SQL — the user doesn't have to know naming conventions or file layout in advance.
+Exercises `status` and `search`. Six entity types — wider than the other scenarios — which is exactly why discovery has to happen before any SQL.
 
-After the user runs this, pause and wait. If they paste back a list of models, confirm that all six expected domains surfaced. The two most commonly missed: a dedicated **categories** model (sometimes category lives only as a column on products), and a separate **order lines** model (sometimes folded into orders). Flag either before moving on.
+When the response comes back, confirm all six domains surfaced. Two are commonly missed: a dedicated **categories** model (sometimes category lives only as a column on products) and a separate **order lines** model (sometimes folded into orders). Name either before moving on — the downstream logic depends on it. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
+
+```
+Show the grain and joins for those models.
+```
 
 ---
 
 ## Step 2 — Schema Understanding
 
-Prompt:
+Exercises `describe` and `lineage`. Check three things when the response returns:
 
-> Show the grain and joins for those models.
+- Where **category** actually lives — product level, order-line level, or order header. Category-loyal logic in Step 5 lives or dies on this.
+- The grain of orders versus order lines — this defines the transaction-count denominator.
+- Whether **store** is on the order, on the customer, or on both — per-store segmentation requires store on the transaction, not just on the customer.
 
-**What this does:** Uses `describe` and `lineage` to confirm that customer, store, transaction, and category logic can all be connected.
+These are the joins teams quietly get wrong and then spend a week debugging. Name any blocker now, before writing the activity layer. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-After the user runs this, pause. If they share output, flag for the user:
-
-- If **order lines and orders are separate models**, confirm the join key (typically `order_id`) and that **category lives on the product or order line level — not the order header**. Category-loyal logic in Step 5 depends on this grain being correct.
-- The grain of the orders table (one row per order? per order line?) — this defines the transaction-count denominator.
-- The customer↔store relationship: is store on the order, on the customer, or both? Per-store segmentation needs the store on the transaction.
-- Any blockers (e.g., missing customer_id on orders, no date column on order lines) before moving on.
+```
+Check recent order dates and category values needed for a 180-day segmentation model.
+```
 
 ---
 
 ## Step 3 — Data Inspection
 
-Prompt:
+Exercises `warehouse` and `dbt_show` on the rolling-window anchor and the distinct category values. Two silent bugs to watch for:
 
-> Check recent order dates and category values needed for a 180-day segmentation model.
+- A **stale `max(order_date)`** that quietly shrinks the 180-day window. If the most recent order is months old, "trailing 180 days from today" returns far less data than the user expects.
+- A **category field with nulls, whitespace, or mixed case** that breaks category-loyal logic later.
 
-**What this does:** Uses `warehouse` and `dbt_show` to inspect the actual rolling-window anchor (what is the max order date?) and the distinct category values in the data. This avoids two silent bugs:
+If the max order date is more than a few days old, decide with the user whether to anchor the window on `current_date` or on `max(order_date)`. If categories are dirty, decide on exclude-versus-coalesce now. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-- A **stale date anchor** that shrinks the 180-day window — if the most recent order is months old, "trailing 180 days from today" returns far less data than expected.
-- A **category field with unexpected nulls or formatting** (mixed case, whitespace, sparse population) that would silently break the category-loyal logic in Step 5.
-
-After the user runs this, pause. If the max order date looks stale (more than a few days behind today's date), flag it so the user can decide whether to anchor the window on `current_date` or on `max(order_date)`. If categories have nulls or odd values, decide with the user how to handle them (exclude vs. coalesce) before Step 4.
+```
+Create a 180-day customer activity model by store.
+```
 
 ---
 
-## Step 4 — Activity Layer Model Creation
+## Step 4 — Activity Layer Model
 
-Prompt:
-
-> Create a 180-day customer activity model by store.
-
-**What this does:** Uses dbt Wizard's file edits and model-creation tools to build the **reusable activity layer** — not the segment model yet. This intermediate model should produce per-customer, per-store aggregates over the trailing 180 days:
+Exercises file edits and model creation. This is the **reusable intermediate model** — not the segment model yet. Per-customer × store aggregates over the trailing 180 days:
 
 - `transaction_count` — count of orders in the window
 - `avg_transaction_value` — mean order value
 - `max_transaction_value` — largest single order value
-- Category-level transaction counts — count of transactions per category (per customer × store × category)
+- `category_transaction_count` — per-category transaction counts at customer × store × category grain
 
-**Why a separate model:** building this as its own model (not inlined into the segment model) makes the logic **testable and reusable**. Other downstream models (churn, RFM, dashboards) can sit on the same activity layer instead of re-deriving these aggregates.
+Building this as its own model is the design choice that pays back for years. Churn models, RFM models, executive dashboards — all of them can sit on this layer instead of re-deriving the same aggregates in five different places. That is the difference between an analytics-engineering practice and a pile of one-off queries.
 
-After the user runs this, pause. If they share the generated SQL, briefly verify:
+When the SQL is generated, verify the 180-day window is applied consistently and that the grain is customer × store (with customer × store × category for the category counts). Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-- The 180-day window is applied consistently to all aggregates.
-- The grain is **customer × store** (or customer × store × category for the category counts) — not just customer.
-- The category counts can be joined back to the customer × store grain in Step 5.
+```
+Create a segment model for VIPs, big spenders, and category-loyal customers, built on top of the activity model.
+```
 
 ---
 
-## Step 5 — Segment Model Creation
+## Step 5 — Segment Model
 
-Prompt:
-
-> Create a segment model for VIPs, big spenders, and category-loyal customers.
-
-**What this does:** Uses file edits and dbt model creation, built **on top of the activity layer from Step 4**. The three segment definitions:
+Exercises file edits and model creation on top of the activity layer. The three canonical segment definitions for this scenario:
 
 - **VIP** — `avg_transaction_value > $100` AND `transaction_count >= 3`
 - **Big spender** — `max_transaction_value > $300` (at least one transaction over $300)
-- **Category-loyal** — at least 10 transactions in the same category (`category_transaction_count >= 10`)
+- **Category-loyal** — `category_transaction_count >= 10` for any single category
 
-**Important:** customers can appear in multiple segments. The model should `UNION` (or otherwise tag rows) so a single customer can have multiple segment rows.
+Customers can belong to multiple segments. The model should tag or union rows so a single customer can appear with multiple `segment_name` values — that is the business definition, not a bug. Expected columns: customer identifier, `store_name`, `segment_name`, `transaction_count`, `avg_transaction_value`, `max_transaction_value`, `category`, `category_transaction_count`.
 
-Expected output columns:
+When the SQL is generated, verify the multi-segment logic and confirm the thresholds match the definitions above. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-- Customer identifier
-- `store_name`
-- `segment_name` (VIP / Big spender / Category-loyal)
-- `transaction_count`
-- `avg_transaction_value`
-- `max_transaction_value`
-- `category`
-- `category_transaction_count`
-
-After the user runs this, pause and remind them this is a **two-model design**: the activity layer (Step 4) feeds the segment model (Step 5). Optional next steps before opening a pull request:
-
-- `dbt_test` for segment-model grain (uniqueness of customer × store × segment × category) and relationships (customer_id, store_id resolve to dim tables).
-- `dbt_test` for the ratio logic (e.g., avg_transaction_value is non-negative, transaction_count > 0).
-- A `diff` against the prior model version (or against production) to confirm the change is intentional.
+```
+Compile and preview the segment model. Exclude customers with no segment.
+```
 
 ---
 
 ## Step 6 — Safe Preview
 
-Prompt:
+Exercises `dbt_compile` and `dbt_show`. The SQL compiles, sample rows render, nothing lands in the warehouse yet. The "exclude no segment" filter doubles as a data-quality check: if a large share of customers fall out, the thresholds or the date window need a second look *before* Marketing ever sees the list.
 
-> Compile and preview the segment model. Exclude customers with no segment.
+When the preview returns:
 
-**What this does:** Uses `dbt_compile` and `dbt_show` to validate the final targeted campaign list without materializing anything. The "exclude no segment" filter is a **data quality check**: if a large share of customers have no segment, the activity-layer thresholds or the date window may need revisiting *before* the model goes to Marketing.
+- Confirm multi-segment customers appear on multiple rows. If they don't, the union or tagging logic is wrong.
+- Flag any segment that comes back suspiciously empty (zero VIPs, for example). That is almost always a threshold or join issue, not reality.
+- Eyeball whether the audience size is plausible for a Marketing campaign. A list of 11 customers is not a campaign; a list of 1.1 million is not targeted.
 
-After the user runs this, pause. If they share the preview:
+Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-- Confirm the column list matches Step 5's expected output and that multi-segment customers appear on multiple rows.
-- If **a large share of customers show no segment** (e.g., the filtered preview is far smaller than the unfiltered customer count would suggest), suggest revisiting the thresholds ($100 / 3 / $300 / 10) or the date window (180 days) before handing the list to Marketing. The thresholds are business-tunable; the date window depends on Step 3's date-anchor decision.
-- Flag any segment that is suspiciously empty (e.g., zero VIPs) — that usually points to a threshold or join issue rather than reality.
+```
+Materialize the segment model into my dev schema. Skip the verification pass — the preview already confirmed the output.
+```
+
+---
+
+## Step 7 — Materialize
+
+Exercises `dbt_run` against the user's dev schema (`dev_lab_user_N`). The "skip the verification pass" instruction is deliberate: the Step 6 preview already validated the output, and re-running a full verification pass burns roughly 10% of a 20-minute lab on duplicate work. The instructor drops dev schemas after the lab via a cleanup script, so this build is safe and reversible.
+
+When the build succeeds, confirm the model landed in the user's dev schema and the row count is consistent with the Step 6 preview. The campaign audience now lives as a queryable, versioned table that Marketing — or a campaign-orchestration tool — can pull from directly.
 
 ---
 
 ## Wrap-up
 
-After Step 6 completes, summarize for the user:
-
-> You started with a business question — *"which customers should Marketing target?"* — and used dbt Wizard to:
->
-> 1. **Discover** the relevant models across 6 entity types (customers, stores, orders, order lines, products, categories) from the business problem, not the file tree.
-> 2. **Validate the schema** — grain, join keys, and where category actually lives.
-> 3. **Inspect the data** for a fresh date anchor and clean category values before writing any rolling-window logic.
-> 4. **Build a reusable activity layer** with per-customer, per-store, per-category aggregates over a trailing 180-day window.
-> 5. **Build a segment model** on top of the activity layer — VIPs, big spenders, and category-loyal customers — with multi-segment customers supported.
-> 6. **Safely preview** the final audience without materializing anything, with a built-in data-quality filter.
->
-> The business-to-technical link: Marketing needed a usable campaign audience; dbt Wizard demonstrated targeted asset discovery, join and grain validation, rolling-window logic, multi-model design (activity layer → segment model), and safe preview without materializing anything. The campaign list now rests on a reusable, testable layer — not a one-off query.
-
-If the user wants to materialize the segment model after the preview (e.g., to hand to Marketing or feed a campaign tool), that's a separate step — confirm with them before running `dbt run` on the new model.
+In two or three sentences: the user took a Marketing question — *"which customers should we target?"* — and used dbt Wizard to discover six entity types, validate grain and joins, inspect the data for a fresh date anchor, build a reusable activity layer, build a segment model on top of it, safely preview the audience, and materialize the result into their own dev schema. The campaign list now sits on a reusable, testable two-model design — not a screenshot of a query somebody ran once. That is what an analytics-engineering workflow looks like.
 
 ---
 

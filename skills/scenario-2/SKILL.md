@@ -1,128 +1,131 @@
 ---
 name: scenario-2
-description: Use this skill whenever a user wants to investigate product quality issues, defective return rates, or vendor performance using dbt Wizard. Triggers on phrases like "scenario 2", "run scenario 2", "faulty product", "defective returns", "vendor contract review", "return rate by product", "product quality complaints", or any multi-step dbt Wizard investigation involving products, vendors, sales, and returns. This skill walks the user through all 5 prompt steps interactively.
+description: Use this skill when the user is evaluating a vendor contract, investigating product quality complaints, or measuring defective return rates with dbt Wizard. Triggers on natural-language phrasing such as "are these vendor complaints real", "which products have a high defective return rate", "should we renew this vendor's contract", "find the products with quality problems", "quantify product returns by vendor", "investigate defective return rate over 20%", "is this vendor's product line failing", or "build a model for faulty products". Use this skill for product/vendor/returns analysis specifically — not for inventory or shipment questions (that is scenario-1), and not for customer segmentation or marketing questions (that is scenario-3). Walks the user through a six-step dbt Wizard investigation ending in a materialized model in their dev schema.
 ---
 
 # dbt Wizard — Faulty Product Discovery
 
-A guided, interactive 5-step workflow for using dbt Wizard to investigate faulty product returns — replacing anecdotal vendor complaints with measurable return-rate evidence so the business can make a defensible vendor-contract renewal decision.
+A six-step workflow that replaces anecdotal vendor complaints with a measurable defective-return-rate metric — so a contract-renewal decision rests on data, not on a salesperson's gut feel.
 
-The skill starts from a **business problem** ("are these vendor complaints real, and which products justify them?") and walks the user through dbt Wizard's discovery, schema, categorical inspection, modeling, and safe-preview capabilities — without ever materializing changes to the warehouse.
+## How to run this skill
 
-## How to use this skill
+For every step:
 
-For each step below:
+1. Show the user the question to ask dbt Wizard inside a plain fenced code block — no quoting, no decoration, so it can be triple-clicked and copied or read off a printed lab sheet.
+2. Always frame the question as *"copy this as written, or rephrase it in your own words"* — give the user the explicit choice between using the canonical version and paraphrasing. Either path is correct; the lab is about the workflow, not the wording.
+3. State briefly what dbt Wizard exercises under the hood.
+4. After dbt Wizard responds, interpret in one or two lines where the user now stands. Do not restate dbt Wizard's output — name the *insight* the user just earned. Then surface the next question in another plain code block, again with the copy-or-rephrase framing.
 
-1. **Show the user the exact prompt** to paste into dbt Wizard (use a blockquote so it's copy-pasteable).
-2. **Explain what dbt Wizard will do** under the hood (which tools/capabilities are exercised).
-3. **Pause** and ask: *"Ready for the next step? Paste your dbt Wizard output here or just say 'next' to continue."*
-4. If the user pastes output, **briefly interpret** what it means for the investigation before advancing.
-5. Do not skip ahead. Run the steps in order.
+Never tell the user to "say next," "paste output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order.
 
-If the user has not yet installed or configured dbt Wizard, refer them to `references/dbt_wizard_setup.md` before Step 1.
+If dbt Wizard is not yet installed, see `references/dbt_wizard_setup.md` before Step 1.
 
 ---
 
 ## Step 1 — Discovery
 
-Prompt the user to paste this into dbt Wizard:
+Ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-> Find the models related to products, vendors, sales, and returns.
+```
+Find the models related to products, vendors, sales, and returns.
+```
 
-**What this does:** Uses dbt Wizard's `status` and `search` capabilities to surface only the relevant models for product quality analysis — starting from the business question, not the full project. The user doesn't need to know the file layout or naming conventions in advance.
+Exercises `status` and `search`. dbt Wizard surfaces only the models relevant to the business question — the user does not need to know the file layout.
 
-After the user runs this, pause and wait. If they paste back a list of models, confirm that all four expected domains (products, vendors, sales, returns) surfaced. If one is missing — especially returns or the product↔vendor link — flag it before moving on, since the metric can't be built without all four.
+Confirm all four domains surfaced. If returns or the product↔vendor link is missing, name it now — the metric cannot be built without them.
+
+Important HOL note: the physical returns table is `RET_RETURNS`, and it carries the `RETURN_REASON` field needed for the defective-return numerator. If returns do not surface in dbt search, inspect `information_schema` for `RET_RETURNS` and add/repair the `RET_RETURNS` source plus a `stg_returns` model before proceeding.
+
+Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
+
+```
+Show the grain and key columns for those models.
+```
 
 ---
 
 ## Step 2 — Schema Understanding
 
-Prompt:
+Exercises `describe` and `lineage`. Confirms the *numerator* (defective returns), the *denominator* (units sold), and the join path to vendor — before any SQL is written. Skipping this step is how teams ship a ratio metric where the numerator and denominator are on different grains.
 
-> Show the grain and key columns for those models.
+When the response comes back, name in one or two lines: the grain of the sales / order-items table (your denominator), the grain of `stg_returns` / `RET_RETURNS` (one row per product return record, with `return_reason`), and the join path returns → order items/orders → products → vendors or brand. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-**What this does:** Uses `describe` and `lineage` to confirm the **numerator** (defective returns), the **denominator** (units sold), and how the **vendor relationship** joins in — *before* writing any SQL. The user learns the grain of each table and the join path in one pass.
-
-After the user runs this, pause. If they share output, briefly note:
-- The grain of the sales/order-items table (per line item? per order?) — this defines the denominator.
-- The grain of the returns table and whether a return row carries a reason code.
-- The join path from returns → sales → products → vendors.
-- Anything that would block the next step (e.g., returns table has no `reason` column, or vendor only joins through a bridge table).
+```
+Show the distinct return reasons in the returns data.
+```
 
 ---
 
 ## Step 3 — Categorical Inspection
 
-Prompt:
+Exercises `warehouse` to inspect actual values rather than guess the filter string. This is the step that separates an analytics engineer from someone who is about to silently corrupt a board-level metric.
 
-> Show the distinct return reasons in the returns data.
+When the distinct values return, help the user pick the string(s) that map to "defective." Examples you might see — frame them as illustrative, never authoritative:
 
-**What this does:** Uses `warehouse` to inspect actual values in the data rather than guessing the filter string for "defective" returns. This is the single most important step for avoiding a silent wrong-filter bug that would corrupt the metric — e.g., filtering for `'defective'` when the warehouse actually stores `'DEFECTIVE'`, `'Product Defect'`, or `'Damaged – Manufacturing'`.
+- All-caps codes like `DEFECTIVE`, `DAMAGED`, `QUALITY_ISSUE`
+- Human-readable strings like `Product Defect`, `Damaged - Manufacturing`
+- Multiple values that all mean defective — Step 4 will need an `IN (...)` clause, not `=`
 
-After the user runs this, pause. If they share the distinct values, help them identify which value(s) map to "defective." Examples to watch for:
-- All-caps codes: `DEFECTIVE`, `DAMAGED`, `QUALITY_ISSUE`
-- Human-readable strings: `Product Defect`, `Damaged – Manufacturing`, `Item not as described`
-- Multiple values that all mean defective — in which case the Step 4 filter will need an `IN (...)` clause, not `=`.
+HOL rule: use only `return_reason = 'defective'` for the defective-return numerator. Exclude `return_reason = 'damaged in transit'` because it is treated as logistics damage, not a product-quality defect.
 
-Confirm the exact string(s) with the user before moving to Step 4. A wrong filter string here means the rest of the analysis is silently wrong.
+Confirm the exact string(s) with the user before moving on. A wrong filter here makes the rest of the analysis silently wrong and the vendor conversation indefensible. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
+
+```
+Create a model for products with a defective return rate over 20% in the trailing 365 days. Include product name, vendor name, units sold, defective units returned, and the defective return rate.
+```
 
 ---
 
 ## Step 4 — Model Creation
 
-Prompt:
+Exercises file edits and model creation. Expected columns:
 
-> Create a model for products with a defective return rate over 20% in the past year.
+- product / item name
+- vendor name
+- `units_sold_trailing_365d` — denominator
+- `defective_units_returned_trailing_365d` — numerator, filtered to the reason string(s) from Step 3; in this HOL, include only `return_reason = 'defective'` and explicitly exclude `return_reason = 'damaged in transit'`
+- `defective_return_rate` — numerator divided by denominator
+- Filter: `defective_return_rate > 0.20`
 
-**What this does:** Uses dbt Wizard's file edits and model-creation tools to write a new dbt model. The expected output columns:
+When the model is generated, confirm in one or two lines: the reason filter matches Step 3 exactly, the trailing-365-day window is applied consistently to numerator and denominator, and the 20% threshold is applied to the aggregated rate (not to raw rows). Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
-- `product_name` (or item name)
-- `vendor_name`
-- `units_sold_trailing_365d` — denominator, trailing 365 days
-- `defective_units_returned_trailing_365d` — numerator, trailing 365 days, filtered to the defective reason(s) confirmed in Step 3
-- `defective_return_rate` — numerator / denominator
-- Filter: only rows where `defective_return_rate > 0.20`
-
-After the user runs this, pause. If they share the generated SQL, briefly verify:
-- The defective-reason filter uses the exact string(s) confirmed in Step 3.
-- The trailing-365-day window is applied consistently to both numerator and denominator (date filter on the same date column, or aligned date columns).
-- The 20% threshold is applied as a `HAVING` (or outer filter on the aggregated rate), not on raw rows.
+```
+Compile and preview the model with product, vendor, units sold, defective returns, and return rate.
+```
 
 ---
 
 ## Step 5 — Safe Preview
 
-Prompt:
+Exercises `dbt_compile` and `dbt_show`. The SQL compiles, sample rows render, nothing lands in the warehouse yet.
 
-> Compile and preview the model with product, vendor, units sold, defective returns, and return rate.
+When the preview returns, confirm the column list matches Step 4. Then flag two failure modes a stakeholder will catch if you don't:
 
-**What this does:** Uses `dbt_compile` and `dbt_show` to validate the model output without materializing it — the SQL compiles, sample rows are previewed, but nothing is written to the warehouse. The business gets evidence *before* anything hits production.
+- Products near the 20% threshold (roughly 19–22%) — these are the rows the vendor will dispute first, and the rows you should stress-test with a different window before citing them.
+- Products with a very small denominator (e.g., fewer than 50 units sold) — a high return rate on a tiny base is not yet defensible evidence.
 
-After the user runs this, pause. If they share the preview table:
-- Confirm the column list matches Step 4's expected output.
-- Flag any products whose `defective_return_rate` is **near the 20% threshold** (e.g., 19–22%) — these are the rows a business stakeholder will most likely want to double-check or stress-test with a different window before making a contract decision.
-- Flag any product where `units_sold_trailing_365d` is very small (e.g., <50) — a high return rate on a tiny denominator may not be statistically meaningful, and the business should know that before citing it in a vendor conversation.
+Naming these up front is the difference between a metric the business trusts and a metric the business has to walk back. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
+
+```
+Materialize this model into my dev schema. Skip the verification pass — go straight to the build.
+```
+
+---
+
+## Step 6 — Materialize
+
+Exercises `dbt_run` against the user's dev schema (`dev_lab_user_N`). The "skip the verification pass" instruction is deliberate: Step 5 already validated the output, and verification consumes roughly 10% of the lab's total time. The instructor drops dev schemas after the lab via a cleanup script, so this build is safe and disposable.
+
+When the build succeeds, confirm the model landed in the user's dev schema with a non-zero row count. The user now has a queryable, versioned table they can hand to procurement or wire into a vendor scorecard dashboard.
 
 ---
 
 ## Wrap-up
 
-After Step 5 completes, summarize for the user:
-
-> You started with a business question — *"are these vendor complaints real, and which products justify not renewing the contract?"* — and used dbt Wizard to:
->
-> 1. **Discover** the relevant models (products, vendors, sales, returns) from the business problem, not the file tree.
-> 2. **Validate the schema** to confirm the numerator, denominator, and vendor join were all available.
-> 3. **Inspect categorical values** in the returns data so the "defective" filter matches what's actually in the warehouse — eliminating a silent wrong-filter bug.
-> 4. **Create a dbt model** computing trailing-365-day defective return rate per product+vendor, filtered to >20%.
-> 5. **Safely preview** the model output without materializing it, so the business has evidence before anything is written.
->
-> The business-to-technical link: dbt Wizard replaced anecdotal vendor complaints with a measurable, defensible return-rate metric — via relevant model discovery → categorical value inspection → correct metric calculation → safe validation. The contract-renewal decision now rests on data, not stories.
-
-If the user wants to materialize the model after the preview (e.g., to share with the vendor or build a dashboard), that's a separate step — confirm with them before running `dbt run` on the new model.
+In two or three sentences: the user started with *"are these vendor complaints real?"* and ended with a materialized, queryable model of products whose defective return rate exceeds 20% over the trailing year. The contract-renewal conversation now rests on a measurable, reproducible metric instead of anecdotes. That is the analytics-engineering job — and dbt Wizard moved the user through it in minutes, not days.
 
 ---
 
 ## References
 
-- `references/dbt_wizard_setup.md` — install, run, config, and auth requirements for dbt Wizard.
+- `references/dbt_wizard_setup.md` — install, run, config, and auth for dbt Wizard.
