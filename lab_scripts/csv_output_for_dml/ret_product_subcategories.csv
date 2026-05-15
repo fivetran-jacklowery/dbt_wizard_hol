@@ -1,0 +1,47 @@
+CTID_FIVETRAN_ID,ID,CATEGORY_ID,NAME,DESCRIPTION,CREATED_AT,UPDATED_AT,_FIVETRAN_DELETED,_FIVETRAN_SYNCED
+TBD_SC_000001,1,1,Cordless Drills,Battery-powered drills and driver kits,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000002,2,1,Circular Saws,Corded and cordless circular saws,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000003,3,1,Sanders & Polishers,"Orbital, belt, and detail sanders",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000004,4,1,Angle Grinders,Corded and cordless grinders and cut-off tools,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000005,5,2,Wrenches & Sockets,"Ratchets, socket sets, and combination wrenches",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000006,6,2,Pliers & Cutters,"Needle-nose, slip-joint, and locking pliers",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000007,7,2,Screwdrivers,"Phillips, flathead, and precision screwdriver sets",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000008,8,2,Hammers & Mallets,"Claw hammers, ball-peen, and rubber mallets",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000009,9,3,Pipes & Fittings,"PVC, copper, and PEX pipes and connectors",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000010,10,3,Faucets,"Kitchen, bathroom, and utility faucets",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000011,11,3,Valves & Regulators,"Ball valves, gate valves, and pressure regulators",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000012,12,3,Water Heaters,Tank and tankless water heaters,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000013,13,4,Wire & Cable,"Romex, THHN, and extension cords",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000014,14,4,Outlets & Switches,"GFCI outlets, dimmers, and smart switches",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000015,15,4,Breakers & Panels,Circuit breakers and electrical panels,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000016,16,4,Lighting,"LED bulbs, fixtures, and recessed lighting",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000017,17,5,Interior Paint,Wall and ceiling paints in all finishes,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000018,18,5,Exterior Paint,Weather-resistant exterior coatings,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000019,19,5,Wood Stain & Finishes,"Deck stain, polyurethane, and sealants",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000020,20,5,Primers & Sealants,"Primer, caulk, and surface prep",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000021,21,6,Screws & Bolts,"Wood screws, machine bolts, and lag bolts",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000022,22,6,Nails & Brads,"Framing nails, finish nails, and brad nails",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000023,23,6,Anchors & Wall Fasteners,"Drywall anchors, toggle bolts, and masonry anchors",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000024,24,6,Hinges & Latches,"Door hinges, gate latches, and cabinet hardware",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000025,25,7,Dimensional Lumber,"2x4, 2x6, 4x4, and framing lumber",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000026,26,7,Plywood & Panels,"Construction plywood, OSB, and MDF panels",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000027,27,7,Insulation,"Fiberglass batts, spray foam, and rigid board",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000028,28,7,Drywall & Accessories,"Drywall sheets, joint compound, and tape",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000029,29,8,Space Heaters,"Ceramic, infrared, and oil-filled heaters",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000030,30,8,Fans & Ventilation,"Box fans, ceiling fans, and exhaust fans",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000031,31,8,Thermostats,Programmable and smart thermostats,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000032,32,8,HVAC Filters,Furnace filters and air purifiers,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000033,33,9,Lawn Mowers,"Push, self-propelled, and riding mowers",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000034,34,9,Garden Hand Tools,"Shovels, rakes, pruners, and garden gloves",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000035,35,9,Outdoor Lighting,"Path lights, spotlights, and solar lights",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000036,36,9,Fencing & Edging,"Privacy fence, garden edging, and gates",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000037,37,10,Smoke & CO Detectors,"Smoke alarms, carbon monoxide detectors",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000038,38,10,Padlocks & Deadbolts,"Combination, keyed, and smart locks",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000039,39,10,Work Gloves,"Leather, nitrile, and cut-resistant gloves",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000040,40,10,Safety Glasses & Ear Pro,Impact-rated glasses and earplugs,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000041,41,11,Vinyl Plank,Luxury vinyl plank and peel-and-stick,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000042,42,11,Ceramic Tile,Floor and wall ceramic and porcelain tile,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000043,43,11,Laminate Flooring,Click-lock and glue-down laminate planks,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000044,44,12,Vanities & Cabinets,Bathroom vanities and storage cabinets,2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000045,45,12,Sinks,"Undermount, drop-in, and vessel sinks",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
+TBD_SC_000046,46,12,Bath Faucets & Fixtures,"Bathroom faucets, showerheads, and accessories",2022-01-01 00:00:00.000,2022-01-01 00:00:00.000,FALSE,2026-05-15 14:57:08.617 -0700
