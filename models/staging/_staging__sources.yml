@@ -19,9 +19,6 @@ sources:
       - name: RET_ORDER_ITEMS
         description: One row per line item within an order, including quantity, unit price, and discount.
 
-      - name: RET_RETURNS
-        description: Product return records with order, order item, product, customer, return date, quantity, and return reason.
-
       - name: RET_PRODUCTS
         description: Product catalog with SKU, pricing, brand, and active status.
 
@@ -36,12 +33,6 @@ sources:
 
       - name: RET_INVENTORY
         description: Current inventory levels per product per warehouse, with reorder thresholds.
-
-      - name: RET_SHIPMENTS
-        description: Shipment headers for planned inventory allocations to destination warehouses.
-
-      - name: RET_SHIPMENT_LINES
-        description: Shipment line items with planned product quantities per shipment.
 
       - name: RET_INVENTORY_TRANSACTIONS
         description: Log of every inventory movement (receipt, sale, adjustment, return) per product per warehouse.

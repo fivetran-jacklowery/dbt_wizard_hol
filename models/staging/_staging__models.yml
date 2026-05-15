@@ -1,0 +1,327 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: Staged customer records — renamed and type-normalized from RET_CUSTOMERS. Soft-deleted rows excluded.
+    columns:
+      - name: customer_id
+        description: Business primary key for the customer (from source ID column).
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: Customer email address (lowercased).
+        tests:
+          - unique
+          - not_null
+      - name: customer_type
+        description: Customer segment classification (lowercased).
+        tests:
+          - not_null
+      - name: state
+        description: Two-letter US state abbreviation (uppercased).
+        tests:
+          - not_null
+
+  - name: stg_orders
+    description: Staged order records — normalized status and shipping fields from RET_ORDERS. Soft-deleted rows excluded.
+    columns:
+      - name: order_id
+        description: Business primary key for the order.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to stg_customers.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+              config:
+                severity: warn
+      - name: order_status
+        description: Current status of the order (lowercased).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['completed', 'returned', 'pending', 'cancelled', 'processing', 'shipped', 'delivered']
+      - name: order_date
+        description: Timestamp when the order was placed.
+        tests:
+          - not_null
+      - name: total_amount
+        description: Total billed to the customer including tax and shipping.
+        tests:
+          - not_null
+
+  - name: stg_order_items
+    description: Staged order line items from RET_ORDER_ITEMS. Soft-deleted rows excluded.
+    columns:
+      - name: order_item_id
+        description: Business primary key for the order item.
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: Foreign key to stg_orders.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+              config:
+                severity: warn
+      - name: product_id
+        description: Foreign key to stg_products.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+              config:
+                severity: warn
+      - name: quantity
+        description: Number of units ordered for this line item.
+        tests:
+          - not_null
+      - name: line_total
+        description: Total revenue for this line item (quantity × unit_price × (1 − discount_pct/100)).
+        tests:
+          - not_null
+
+  - name: stg_products
+    description: Staged product catalog from RET_PRODUCTS. Soft-deleted rows excluded.
+    columns:
+      - name: product_id
+        description: Business primary key for the product.
+        tests:
+          - unique
+          - not_null
+      - name: sku
+        description: Stock keeping unit identifier — unique per product.
+        tests:
+          - unique
+          - not_null
+      - name: subcategory_id
+        description: Foreign key to stg_product_subcategories.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_product_subcategories')
+              field: subcategory_id
+              config:
+                severity: warn
+      - name: unit_price
+        description: Listed selling price in dollars.
+        tests:
+          - not_null
+
+  - name: stg_product_categories
+    description: Lookup table for top-level product categories from RET_PRODUCT_CATEGORIES.
+    columns:
+      - name: category_id
+        description: Business primary key for the category.
+        tests:
+          - unique
+          - not_null
+      - name: category_name
+        description: Human-readable category name.
+        tests:
+          - not_null
+
+  - name: stg_product_subcategories
+    description: Lookup table for product subcategories from RET_PRODUCT_SUBCATEGORIES. Each belongs to a parent category.
+    columns:
+      - name: subcategory_id
+        description: Business primary key for the subcategory.
+        tests:
+          - unique
+          - not_null
+      - name: category_id
+        description: Foreign key to stg_product_categories.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_product_categories')
+              field: category_id
+              config:
+                severity: warn
+      - name: subcategory_name
+        description: Human-readable subcategory name.
+        tests:
+          - not_null
+
+  - name: stg_product_reviews
+    description: Staged customer product reviews from RET_PRODUCT_REVIEWS. Soft-deleted rows excluded.
+    columns:
+      - name: review_id
+        description: Business primary key for the review.
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: Foreign key to stg_products.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+              config:
+                severity: warn
+      - name: customer_id
+        description: Foreign key to stg_customers.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+              config:
+                severity: warn
+      - name: rating
+        description: Customer rating from 1 (worst) to 5 (best).
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+
+  - name: stg_inventory
+    description: Staged current inventory levels per product per warehouse from RET_INVENTORY. Soft-deleted rows excluded.
+    columns:
+      - name: inventory_id
+        description: Business primary key for the inventory record.
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: Foreign key to stg_products.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+              config:
+                severity: warn
+      - name: warehouse_id
+        description: Foreign key to stg_warehouses.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+              config:
+                severity: warn
+      - name: quantity_on_hand
+        description: Current stock quantity at this warehouse.
+        tests:
+          - not_null
+
+  - name: stg_inventory_transactions
+    description: Staged inventory movement log from RET_INVENTORY_TRANSACTIONS. Soft-deleted rows excluded.
+    columns:
+      - name: transaction_id
+        description: Business primary key for the transaction.
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: Foreign key to stg_products.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+              config:
+                severity: warn
+      - name: warehouse_id
+        description: Foreign key to stg_warehouses.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_warehouses')
+              field: warehouse_id
+              config:
+                severity: warn
+      - name: transaction_type
+        description: Type of inventory movement (lowercased).
+        tests:
+          - not_null
+      - name: quantity
+        description: Number of units moved.
+        tests:
+          - not_null
+
+  - name: stg_promotions
+    description: Staged promotions from RET_PROMOTIONS. Soft-deleted rows excluded.
+    columns:
+      - name: promotion_id
+        description: Business primary key for the promotion.
+        tests:
+          - unique
+          - not_null
+      - name: discount_type
+        description: Type of discount — percent or fixed (lowercased).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['percent', 'fixed']
+      - name: applicable_category_id
+        description: Foreign key to stg_product_categories — category this promotion applies to.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_product_categories')
+              field: category_id
+              config:
+                severity: warn
+
+  - name: stg_tickets
+    description: Staged customer support tickets from RET_TICKETS. Soft-deleted rows excluded.
+    columns:
+      - name: ticket_id
+        description: Business primary key for the support ticket.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to stg_customers.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+              config:
+                severity: warn
+      - name: issue_type
+        description: Type of issue reported (lowercased).
+        tests:
+          - not_null
+      - name: priority
+        description: Ticket priority level (lowercased).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['low', 'medium', 'high', 'critical']
+      - name: ticket_status
+        description: Current resolution status (lowercased).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['open', 'in_progress', 'resolved', 'closed']
+
+  - name: stg_warehouses
+    description: Staged warehouse locations from RET_WAREHOUSES. Soft-deleted rows excluded.
+    columns:
+      - name: warehouse_id
+        description: Business primary key for the warehouse.
+        tests:
+          - unique
+          - not_null
+      - name: warehouse_name
+        description: Human-readable warehouse name.
+        tests:
+          - not_null
+      - name: state
+        description: Two-letter US state abbreviation (uppercased).
+        tests:
+          - not_null
