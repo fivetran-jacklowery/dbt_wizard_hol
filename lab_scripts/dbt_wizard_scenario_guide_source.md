@@ -28,6 +28,17 @@ What should we do next?
 
 The expected lab flow is New User Onboarding -> Scenario 1 -> Scenario 2 -> Scenario 3, where Scenario 3 is the broken product/source-schema-change use case. Scenario 4, Marketing Targeted Campaigns, is optional. The instructor may skip any scenario entirely; dbt Wizard should not backfill skipped scenarios.
 
+Use the attendee's prompt to match the active domain quickly:
+
+* inventory allocation, stock variance, shipments, stores, or expected per-store quantity -> inventory misallocation workflow
+* ticket counts, open tickets, support burden, enriched orders, or `stg_tickets` -> order support-ticket enrichment workflow
+* failed dbt run, missing/renamed source column, `brand`, `brand_name`, or `stg_products` -> product source-schema-change workflow
+* VIPs, big spenders, category-loyal customers, customer segments, or marketing audiences -> optional marketing segmentation workflow
+
+After a workflow has been activated, keep using that same domain context for follow-up prompts until the attendee clearly changes domains or the instructor moves to another workflow. Do not jump backward to fill in skipped steps.
+
+If the conversation is about improving the lab, prompts, or skills, treat it as meta-discussion. In that mode, do not run warehouse queries, edit dbt files, or execute the workflow unless the user explicitly asks to implement the scenario. If a scenario-like prompt appears immediately after meta-discussion, clarify whether the user wants execution or only analysis/notes before changing files.
+
 # Onboarding Scenario: New Analytics Engineer
 
 **Persona:** It's your first week at The Builder Depot. You've been handed access to the dbt repo and a vague mandate: "get familiar with the project and ship something small by Friday." You've never seen this codebase before. You'll use dbt Wizard as your onboarding buddy — to orient yourself, learn the conventions, and make your first contribution safely.
