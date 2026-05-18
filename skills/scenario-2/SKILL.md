@@ -1,25 +1,24 @@
 ---
 name: scenario-2
-description: Use this skill when the user wants to extend an existing dbt model by adding a new source that the model does not currently reference, and wants dbt Wizard to guide the safe modification end-to-end. Triggers on natural-language phrasing like "add a new source to an existing model", "extend a model with another table", "this Fivetran source isn't being used yet and I need it in the customer model", "wire support tickets into the customer summary", "add promotions to enriched orders", "add product reviews to product performance", "modify an existing intermediate model to bring in another source", "join a new source into an existing model without breaking downstream", or "extend an existing model to include another domain". Use for the modify-existing-model-with-new-source workflow specifically — not for inventory/shipment problems (scenario-1), customer segmentation from scratch (scenario-3), or upstream schema breakage (scenario-4). The HOL attendee picks one of three extension paths.
+description: Use this skill when the user wants to extend the existing `int_orders_enriched` dbt model with customer support ticket context from `retail.RET_TICKETS`, and wants dbt Wizard to guide the safe modification end-to-end. Triggers on natural-language phrasing like "add support tickets to orders", "extend orders with ticket counts", "show which orders have support tickets", "wire tickets into int_orders_enriched", "add a new source to an existing model", "modify an existing intermediate model to bring in another source", or "join support ticket data into enriched orders without breaking downstream". Use for the modify-existing-model-with-new-source workflow specifically — not for inventory/shipment problems (scenario-1), customer segmentation from scratch (scenario-3), or upstream schema breakage (scenario-4).
 ---
 
-# dbt Wizard - Extending an Existing Model with a New Source
+# dbt Wizard - Extending Orders with Support Ticket Context
 
 A six-step workflow for the most common real-world analytics-engineering task: an existing intermediate model is missing a domain, and a Fivetran-synced source already in the warehouse can fill the gap. The job is to wire the new source into the existing model **without breaking the downstream consumers that already depend on it**.
 
-The setup: a stakeholder has a follow-up question that the current model can't answer. The data they need is already arriving in Snowflake via Fivetran. It just isn't connected to the model they're staring at.
+The setup: the Director of Operations wants to know which orders generated support burden. The source data already exists in Snowflake as `retail.RET_TICKETS`, and the project already stages it as `stg_tickets`. The missing piece is order-level ticket context in `int_orders_enriched`.
 
 ## How to run this skill
 
-This scenario is **choose-your-path**. At the start, the attendee picks one of three extensions to perform:
+This scenario uses this fixed setup:
 
-- **Path A - Customer 360 + Support Tickets.** Stakeholder: VP of Customer Success. Ask: *"When we segment customers for renewal outreach, can we deprioritize customers with open complaints?"* Target model: `int_customer_order_summary`. New source: `retail.RET_TICKETS`. Add: `open_tickets_count`, `last_ticket_status`, `last_ticket_opened_at` per customer.
-
-- **Path B - Orders + Customer Support Tickets.** Stakeholder: Director of Operations. Ask: *"For every order in the enriched view, can we see how many support tickets were opened against it so we can flag problematic orders for postmortem?"* Target model: `int_orders_enriched`. New source: `retail.RET_TICKETS` (joined at the order grain - note this is the same source Path A uses at the customer grain; that's the point, the source is "new to this model" not new to the project). Add: `ticket_count`, `has_open_ticket_flag`, `last_ticket_status` per order.
-
-- **Path C - Product Performance + Reviews.** Stakeholder: Head of Merchandising. Ask: *"In product performance, can we surface average customer rating and review volume so we can see which top sellers are also well-rated?"* Target model: `int_product_sales_summary`. New source: `retail.RET_PRODUCT_REVIEWS`. Add: `avg_rating`, `review_count`, `low_rating_count` (1-2 stars) per product.
-
-Confirm the user's choice in one line before Step 1. The questions below reference `[TARGET_MODEL]`, `[NEW_SOURCE]`, `[ENTITY]`, and `[NEW_COLUMNS]`. Substitute the values for the path the user picked. Wording is otherwise consistent across paths so the instructor can run a room with attendees on different paths simultaneously.
+- **Target model:** `int_orders_enriched`
+- **New source:** `retail.RET_TICKETS` / `stg_tickets`
+- **Entity grain:** one row per order
+- **Join key:** `order_id`
+- **New columns:** `ticket_count`, `has_open_ticket_flag`, `last_ticket_status`
+- **Stakeholder ask:** *"For every order in the enriched view, can we see how many support tickets were opened against it so we can flag problematic orders for postmortem?"*
 
 For every step:
 
@@ -39,27 +38,27 @@ If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_set
 Ask dbt Wizard - copy this as written (recommended), or rephrase it in your own words:
 
 ```
-Find [TARGET_MODEL] in this project. Show me what it currently produces, its grain, and which models depend on it downstream.
+Find int_orders_enriched in this project. Show me what it currently produces, its grain, and which models depend on it downstream.
 ```
 
 Exercises `search`, `describe`, and `lineage`. We start from the model we're being asked to extend, not from a blank file. Knowing the downstream consumers up front is what separates a safe edit from a Slack thread about a broken dashboard.
 
-When dbt Wizard returns, confirm in one line that the model exists, its grain (one row per [ENTITY]), and at least one downstream consumer that will inherit any changes you make. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+When dbt Wizard returns, confirm in one line that `int_orders_enriched` exists, its grain is one row per order, and it has downstream consumers such as `fct_orders`, `fct_order_items`, `int_daily_revenue`, and customer/product rollups. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Find every source in this project related to [ENTITY] that [TARGET_MODEL] does NOT currently reference. I want to know what data is sitting in our warehouse that we're not using yet.
+Find every support-ticket source or model in this project that int_orders_enriched does NOT currently reference. I want to know what ticket data is sitting in our warehouse that is not connected to enriched orders yet.
 ```
 
 ---
 
 ## Step 2 - Discover the unused source
 
-Exercises `status`, `search`, and source-vs-model cross-referencing. This is the step that earns the workflow: dbt Wizard surfaces a Fivetran-synced source that's already configured in the project but isn't connected to the target model. No need to spelunk through `_staging__sources.yml` or guess what's been added since the last time anyone looked.
+Exercises `status`, `search`, and source-vs-model cross-referencing. This is the step that earns the workflow: dbt Wizard surfaces a Fivetran-synced source already configured in the project but not connected to the target model. No need to spelunk through `_staging__sources.yml` or guess what's been added since the last time anyone looked.
 
-When dbt Wizard returns the candidate source, confirm in one line that `[NEW_SOURCE]` is the one: it exists in the warehouse, it's defined as a source, and the target model does not currently reference it. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+When dbt Wizard returns the candidate source, confirm in one line that `retail.RET_TICKETS` exists, is staged as `stg_tickets`, includes `order_id`, and is not currently referenced by `int_orders_enriched`. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Describe the schema of [NEW_SOURCE]. Show me the columns, their types, the grain, and which column joins back to [ENTITY].
+Describe stg_tickets. Show me the columns, their types, the grain, and how order_id joins back to int_orders_enriched.
 ```
 
 ---
@@ -70,17 +69,17 @@ Exercises `describe`, `warehouse`, and join-key inspection. This is the step tha
 
 Three things to verify before any SQL is touched:
 
-- **Grain.** Is the new source one-row-per-`[ENTITY]`, or many-rows-per-`[ENTITY]`? If it's many, an aggregation belongs in the new model before the join, not after. Otherwise you fan out the target model and silently double-count downstream metrics.
-- **Coverage.** How many rows in the new source match an `[ENTITY]` that already exists in the target model? If coverage is low, the new columns will be mostly null and the stakeholder will ask why.
-- **Join key match.** Are the data types and value formats identical (e.g., both numeric IDs, no leading zeros, no case differences in string keys)?
+- **Grain.** `stg_tickets` is many-rows-per-order because one order can have multiple tickets. Aggregate before the join, or `int_orders_enriched` will fan out and break its one-row-per-order contract.
+- **Coverage.** Count how many ticket `order_id` values match orders already in `int_orders_enriched`. Tickets may be nullable on `order_id`, so explicitly filter to order-linked tickets for this check.
+- **Join key match.** Confirm both sides use the same numeric `order_id` format.
 
 Tell dbt Wizard to confirm each of these directly:
 
 ```
-Run a quick check: count rows in [NEW_SOURCE], count distinct join keys, and count how many of those keys match an [ENTITY] already in [TARGET_MODEL]. Tell me whether the grain is one-to-one or one-to-many.
+Run a quick check: count rows in stg_tickets with a non-null order_id, count distinct ticket order_ids, and count how many of those order_ids match an order_id in int_orders_enriched. Tell me whether stg_tickets is one-to-one or one-to-many at the order grain.
 ```
 
-If the grain is many-rows-per-`[ENTITY]`, the user must decide with dbt Wizard's help whether to aggregate (most common: open tickets count, review count) or pick the latest row by timestamp (e.g., last ticket status). Name the aggregation choice out loud before Step 4. That's the design decision that defines the new columns.
+If the grain is many-rows-per-order, aggregate tickets to one row per `order_id` before joining. The required metrics are `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status`.
 
 ---
 
@@ -91,18 +90,18 @@ Exercises file edits on the existing model file, not a new file. This is deliber
 Ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Update [TARGET_MODEL] to add [NEW_COLUMNS] from [NEW_SOURCE]. Use a LEFT JOIN so [ENTITY] rows without a match still appear, and aggregate [NEW_SOURCE] to one-row-per-[ENTITY] before joining if its grain is many-to-one. Preserve every column the model currently emits — only add new columns at the end.
+Update int_orders_enriched to add ticket_count, has_open_ticket_flag, and last_ticket_status from stg_tickets. Aggregate stg_tickets to one row per order_id before joining, use a LEFT JOIN so orders without tickets still appear, and preserve every column int_orders_enriched currently emits — only add the new columns at the end.
 ```
 
 The two non-negotiables in this step:
 
-- **Left join, not inner.** Inner-joining quietly drops every `[ENTITY]` without a matching row in the new source. That alone has broken more downstream models than any other single mistake in this category of work.
+- **Left join, not inner.** Inner-joining quietly drops every order without a support ticket.
 - **Preserve existing columns.** Downstream consumers select specific columns. Reordering them is fine; renaming or removing them is a contract break.
 
-When dbt Wizard's edit returns, the user spot-checks the diff to confirm: the existing column list is intact, the new columns are appended at the end, the join is a `LEFT JOIN`, and any required aggregation happens in a CTE before the join. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+When dbt Wizard's edit returns, the user spot-checks the diff to confirm: the existing column list is intact, the new columns are appended at the end, the join is a `LEFT JOIN`, and the ticket aggregation happens in a CTE before the join. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Compile [TARGET_MODEL] and every downstream model that depends on it. Then preview 20 rows of [TARGET_MODEL] ordered deterministically. Do not materialize anything.
+Compile int_orders_enriched and every downstream model that depends on it. Then preview 20 rows of int_orders_enriched ordered deterministically by order_id. Do not materialize anything.
 ```
 
 ---
@@ -113,14 +112,15 @@ Exercises `dbt_compile` across the lineage and `dbt_show` on the target. Compili
 
 When the previews render, confirm:
 
-- The 20-row preview of `[TARGET_MODEL]` shows the new columns populated for `[ENTITY]` rows that have matching data in `[NEW_SOURCE]`, and null (not error) for `[ENTITY]` rows that don't.
-- The total row count of `[TARGET_MODEL]` is unchanged from before the edit. If it grew, the join fan-out check from Step 3 was wrong and Step 4 needs a re-edit.
+- The 20-row preview of `int_orders_enriched` shows `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status`.
+- Orders without tickets still appear, with `ticket_count = 0` or null-safe equivalent behavior approved by dbt Wizard.
+- The total row count of `int_orders_enriched` is unchanged from before the edit. If it grew, the ticket aggregation was wrong and Step 4 needs a re-edit.
 - Every downstream model compiled without error.
 
-If any of these three fail, stop and diagnose with dbt Wizard before materializing. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+If any of these fail, stop and diagnose with dbt Wizard before materializing. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Materialize [TARGET_MODEL] into my dev schema. Skip the verification pass — the preview and downstream compile already confirmed the output.
+Materialize int_orders_enriched into my dev schema. Skip the verification pass — the preview and downstream compile already confirmed the output.
 ```
 
 ---
@@ -129,13 +129,13 @@ Materialize [TARGET_MODEL] into my dev schema. Skip the verification pass — th
 
 Exercises `dbt_run` against the user's dev schema. The "skip the verification pass" instruction is deliberate and scoped to this timed lab. Step 5 already validated the output and downstream compile, so a separate verification run burns roughly 10% of the lab's budget on duplicate work. The instructor drops dev schemas after the lab via a cleanup script, so this build is safe and disposable.
 
-When the build succeeds, confirm `[TARGET_MODEL]` landed in the user's dev schema with the new columns populated and the row count unchanged from the pre-edit baseline.
+When the build succeeds, confirm `int_orders_enriched` landed in the user's dev schema with `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status` populated and the row count unchanged from the pre-edit baseline.
 
 ---
 
 ## Wrap-up
 
-The user started with a stakeholder ask that the current model could not answer, used dbt Wizard to find an unused Fivetran-synced source already in the warehouse, validated the join's grain and coverage before writing any SQL, modified the existing model with an alias-safe, left-joined extension, and confirmed the entire downstream lineage still compiles. All in minutes.
+The user started with an operations ask that `int_orders_enriched` could not answer, used dbt Wizard to find ticket data already in the warehouse, validated the order-level join's grain and coverage before writing SQL, modified the existing model with a left-joined aggregation, and confirmed the downstream lineage still compiles. All in minutes.
 
 Done by hand, the everyday extend-an-existing-model task takes half a day of grepping plus a deferred Slack thread when a downstream dashboard breaks. dbt Wizard collapses it into a guided workflow that keeps the engineer focused on the change itself instead of the surrounding archaeology.
 
@@ -143,7 +143,7 @@ Done by hand, the everyday extend-an-existing-model task takes half a day of gre
 
 ## Final artifact
 
-- `[TARGET_MODEL]` now emits `[NEW_COLUMNS]` from `[NEW_SOURCE]` in the user's dev schema. Existing column contract is preserved, downstream models still compile, row count is unchanged.
+- `int_orders_enriched` now emits `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status` from `stg_tickets` in the user's dev schema. Existing column contract is preserved, downstream models still compile, and row count is unchanged.
 
 ---
 

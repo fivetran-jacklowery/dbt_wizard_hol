@@ -1,10 +1,10 @@
 # Scenario 4 - Instructor Setup
 
-Scenario 4 demonstrates dbt Wizard fixing a model that's broken by an upstream column rename. For the attendee to see a real failure, the rename must be applied to the source table **before they run `dbt run`**.
+Scenario 4 demonstrates dbt Wizard fixing a product model that's broken by an upstream column rename. For the attendee to see a real failure, the rename must be applied to the source table **before they run `dbt run`**.
 
-Each path (A, B, C) corresponds to one column rename. Pick one path per cohort, or pre-stage all three across separate dev schemas so attendees can choose.
+This scenario uses the product-source rename: `retail.RET_PRODUCTS.brand` is renamed to `brand_name`.
 
-## Path A - Products (`brand` to `brand_name`)
+## Apply the product rename
 
 Run as a role with ALTER on the retail source schema (e.g. `LAB_INSTRUCTOR_ROLE`):
 
@@ -13,38 +13,15 @@ ALTER TABLE SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.RET_PRODUCTS
   RENAME COLUMN BRAND TO BRAND_NAME;
 ```
 
-## Path B - Orders (`status` to `order_status`)
-
-The DDL baseline has this column as `STATUS`. The `stg_orders` model selects `status AS order_status`. Renaming the source column to `ORDER_STATUS` (the alias name) makes the staging model's `select status as order_status` clause invalid: `status` no longer exists, even though `order_status` now does. The break is "the source column you used to read got renamed to something else."
-
-```sql
-ALTER TABLE SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.RET_ORDERS
-  RENAME COLUMN STATUS TO ORDER_STATUS;
-```
-
-## Path C - Customers (`customer_type` to `segment`)
-
-```sql
-ALTER TABLE SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.RET_CUSTOMERS
-  RENAME COLUMN CUSTOMER_TYPE TO SEGMENT;
-```
+This breaks `stg_products`, which still selects `brand`. The intended fix is to update the staging model to select `brand_name as brand`, preserving the public dbt contract for downstream models.
 
 ## Post-lab cleanup
 
-Reverse each rename after the cohort completes:
+Reverse the rename after the cohort completes:
 
 ```sql
--- Path A
 ALTER TABLE SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.RET_PRODUCTS
   RENAME COLUMN BRAND_NAME TO BRAND;
-
--- Path B
-ALTER TABLE SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.RET_ORDERS
-  RENAME COLUMN ORDER_STATUS TO STATUS;
-
--- Path C
-ALTER TABLE SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.RET_CUSTOMERS
-  RENAME COLUMN SEGMENT TO CUSTOMER_TYPE;
 ```
 
 ## Multi-tenant note
