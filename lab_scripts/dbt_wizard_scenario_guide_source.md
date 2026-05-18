@@ -16,6 +16,18 @@ Each scenario connects a concrete business outcome to the dbt Wizard functionali
 * Create the model.
 * Compile and preview
 
+# dbt Wizard Response Behavior
+
+These scenario prompts are optimized for a time-sensitive lab. dbt Wizard should use the matched scenario as implementation context only; it should not mention scenario names or numbers in attendee-facing responses. The scenarios are not secret — the labels just are not relevant to the attendee's task.
+
+Each response should execute only the current requested step, include only the minimal safety checks required for that step, and stop at the next natural checkpoint. Do not run a scenario end to end unless the user explicitly asks. End each step with:
+
+```
+What should we do next?
+```
+
+The expected lab flow is New User Onboarding -> Scenario 1 -> Scenario 2 -> Scenario 3, where Scenario 3 is the broken product/source-schema-change use case. Scenario 4, Marketing Targeted Campaigns, is optional. The instructor may skip any scenario entirely; dbt Wizard should not backfill skipped scenarios.
+
 # Onboarding Scenario: New Analytics Engineer
 
 **Persona:** It's your first week at The Builder Depot. You've been handed access to the dbt repo and a vague mandate: "get familiar with the project and ship something small by Friday." You've never seen this codebase before. You'll use dbt Wizard as your onboarding buddy — to orient yourself, learn the conventions, and make your first contribution safely.
@@ -43,7 +55,7 @@ Help operations quickly identify where missing inventory went so the business ca
 | Step | User Prompt | What It Demonstrates | dbt Wizard Functionality |
 |---|---|---|---|
 | 1 | Check Product 42 shipments and inventory. Expected quantity is 200 per store. | Interrogates only the data needed for the focal item and expected allocation — skipping straight to the business question. | warehouse, dbt_show |
-| 2 | Create a model showing stores with more than 200 units of Product 42. | Builds the business answer: which stores likely received excess inventory. | file edits, dbt model creation |
+| 2 | Create a model showing stores with the incorrect number of units of Product 42. | Builds the business answer: which stores are over-counted or under-counted against the expected allocation. | file edits, dbt model creation |
 | 3 | Compile and preview the model. Do not materialize it yet. | Validates safely before writing anything to the warehouse. | dbt_compile, dbt_show |
 | 4 | Materialize the view. | Commits the validated model to the warehouse. | dbt_run |
 
@@ -54,11 +66,12 @@ Help operations quickly identify where missing inventory went so the business ca
 * item name
 * actual inventory count
 * expected count, fixed at 200
-* overage quantity
+* variance quantity
+* variance direction showing over-count or under-count
 
 ## Business-to-Technical Link
 
-The business needs to find the missing shipment. dbt Wizard demonstrates targeted data inspection, model creation, safe preview, and materialization.
+The business needs to find the missing shipment. dbt Wizard demonstrates targeted data inspection, model creation, safe preview, and materialization. Variance-focused outputs should include stores where actual inventory differs from expected inventory; matched stores can appear in completeness checks but should not be treated as variance stores.
 
 # Scenario 2: Extending Orders with Support Ticket Context
 
@@ -70,12 +83,11 @@ The Director of Operations needs to flag problematic orders for postmortem revie
 
 | Step | User Prompt | What It Demonstrates | dbt Wizard Functionality |
 |---|---|---|---|
-| 1 | Find int_orders_enriched in this project. Show me what it currently produces, its grain, and which models depend on it downstream. | Starts from the model being extended, confirms the one-row-per-order contract, and surfaces downstream consumers before any edit. | search, describe, lineage |
-| 2 | Find every support-ticket source or model in this project that int_orders_enriched does NOT currently reference. I want to know what ticket data is sitting in our warehouse that is not connected to enriched orders yet. | Identifies retail.RET_TICKETS and stg_tickets as available ticket data not yet connected to enriched orders. | status, search, source/model cross-reference |
-| 3 | Run a quick check: count rows in stg_tickets with a non-null order_id, count distinct ticket order_ids, and count how many of those order_ids match an order_id in int_orders_enriched. Tell me whether stg_tickets is one-to-one or one-to-many at the order grain. | Validates grain, coverage, and join-key compatibility before any SQL is written — prevents silent fan-out and mostly-null new columns at the order level. | describe, warehouse, join-key inspection |
-| 4 | Update int_orders_enriched to add ticket_count, has_open_ticket_flag, and last_ticket_status from stg_tickets. Aggregate stg_tickets to one row per order_id before joining, use a LEFT JOIN so orders without tickets still appear, and preserve every column int_orders_enriched currently emits — only add the new columns at the end. | Modifies the existing model file in place, preserving its public column contract; LEFT JOIN + pre-aggregation enforce the two non-negotiables. | file edits on existing model |
-| 5 | Compile int_orders_enriched and every downstream model that depends on it. Then preview 20 rows of int_orders_enriched ordered deterministically by order_id. Do not materialize anything. | Compile-time guarantee across the full lineage — catches column-contract breaks before they hit a dashboard; null-safe behavior for unmatched orders is spot-checked in the preview. | dbt_compile across lineage, dbt_show |
-| 6 | Materialize int_orders_enriched into my dev schema. Skip the verification pass — the preview and downstream compile already confirmed the output. | Builds into the dev schema with ticket columns populated and order row count unchanged from the pre-edit baseline. | dbt_run against dev schema |
+| 1 | Find enriched orders and show me what it currently produces, its grain, and which models depend on it downstream. | Starts from the model being extended, confirms the one-row-per-order contract, and surfaces downstream consumers before any edit. | search, describe, lineage |
+| 2 | Find ticket data in our warehouse that is not connected to enriched orders yet. | Identifies retail.RET_TICKETS and stg_tickets as available ticket data not yet connected to enriched orders. | status, search, source/model cross-reference |
+| 3 | Count rows in stg_tickets with a non-null order_id, count distinct ticket order_ids, and count how many of those order_ids match an order_id from enriched orders. What is the cardinality of stg_tickets to int_orders_enriched? | Validates grain, coverage, and join-key compatibility before any SQL is written — prevents silent fan-out and mostly-null new columns at the order level. | describe, warehouse, join-key inspection |
+| 4 | Update enriched orders to add ticket count, has_open_ticket_flag, and last_ticket_status from stg_tickets. Then aggregate stg_tickets to one row per order_id before joining. Use a left join so orders without tickets still appear. Preserve every column. | Modifies the existing model file in place, preserving its public column contract; LEFT JOIN + pre-aggregation enforce the two non-negotiables. | file edits on existing model |
+| 5 | Compile enriched orders, and every dependent model downstream. Then preview 20 rows from this model ordered by order_id. Do not materialize anything. | Compile-time guarantee across the full lineage — catches column-contract breaks before they hit a dashboard; null-safe behavior for unmatched orders is spot-checked in the preview. | dbt_compile across lineage, dbt_show |
 
 ## Expected Model Output
 
@@ -88,7 +100,37 @@ The Director of Operations needs to flag problematic orders for postmortem revie
 
 The Director of Ops asked "which orders have open tickets?" and the answer was sitting in a Fivetran-synced table no one had wired up. Done by hand, this task takes half a day of grepping plus a deferred Slack thread when a downstream dashboard breaks. dbt Wizard collapses it: surface retail.RET_TICKETS and stg_tickets alongside int_orders_enriched, validate the order-grain join, edit in place, and confirm the full downstream lineage still compiles — all in minutes.
 
-# Scenario 3: Marketing Targeted Campaigns
+# Scenario 3: Broken Product Model from a Source Column Rename
+
+## Business Value
+
+retail.RET_PRODUCTS.brand was renamed brand_name overnight. stg_products is broken and the blast radius spans ~8 downstream files across intermediates and marts. The fix preserves the public dbt column name via select brand_name as brand so no downstream model has to change. The morning standup is in 30 minutes.
+
+## Prompt Flow
+
+| Step | User Prompt | What It Demonstrates | dbt Wizard Functionality |
+|---|---|---|---|
+| 0 | (Run in the terminal, not in Wizard) dbt run --select stg_products+ | Reproduces the failure live so the rest of the workflow is grounded in a real error message, not a hypothetical. | terminal — dbt run |
+| 1 | My dbt run just failed. Read the most recent run results and tell me which model failed, what the error was, and which upstream source or column the error references. | Reads run-results, parses the error, and names stg_products and the missing column brand — no scrolling stack traces. | status, dbt_show, error parsing |
+| 2 | Describe the current schema of retail.RET_PRODUCTS. List every column that exists today. | Pulls the live column list from Snowflake and converts "something changed" into "brand was renamed brand_name." | describe, warehouse |
+| 3 | Show me every model, source definition, and test in this project that references the product column brand. I need a complete blast-radius list before I change anything. | Maps the full product blast radius — stg_products and downstream intermediates and marts. This is a risk check, not a request to edit every downstream file. | search, lineage, impact analysis |
+| 4 | Update stg_products to read brand_name from retail.RET_PRODUCTS but keep the public column name as brand. Preserve the downstream contract so models that already select brand do not need to change. | Applies the alias-preserving staging fix. Public column brand is unchanged; no downstream model has to be edited. | file edit on staging model |
+| 5 | Compile stg_products and every downstream product model, then preview the first 10 rows of stg_products ordered deterministically by product_id. Do not materialize anything yet. | Compile across the lineage is the smoke test — any missed source-side brand reference fails here, not in the warehouse. Preview confirms brand_name is flowing through as brand. | dbt_compile, dbt_show |
+| 6 | (Run in the terminal, not in Wizard) dbt run --select stg_products+ | Closes the loop on the pre-step failure — green run confirms the fix end-to-end. | terminal — dbt run |
+
+## Expected Outcome
+
+* stg_products compiles and runs green.
+* All ~8 downstream models (intermediates and marts) resolve without further edits.
+* Public column brand preserved via select brand_name as brand.
+* Column tests in _staging__models.yml pass.
+* No source-side references to the missing RET_PRODUCTS.brand remain; public dbt column brand is preserved.
+
+## Business-to-Technical Link
+
+retail.RET_PRODUCTS.brand was renamed brand_name overnight and stg_products took down ~8 downstream models. dbt Wizard reads the error, surfaces brand_name in the live RET_PRODUCTS schema, maps every downstream dependency that relies on the public brand column, and applies select brand_name as brand in staging — broken pipeline to green re-run in minutes without changing downstream models.
+
+# Scenario 4: Optional Marketing Targeted Campaigns
 
 ## Business Value
 
@@ -120,33 +162,3 @@ Help Marketing identify high-value customers for targeted campaigns using recent
 ## Business-to-Technical Link
 
 Marketing needs a usable campaign audience. dbt Wizard demonstrates targeted data inspection, multi-model chained design, and safe preview of the final campaign list.
-
-# Scenario 4: Broken Product Model from a Source Column Rename
-
-## Business Value
-
-retail.RET_PRODUCTS.brand was renamed brand_name overnight. stg_products is broken and the blast radius spans ~8 downstream files across intermediates and marts. The fix preserves the public dbt column name via select brand_name as brand so no downstream model has to change. The morning standup is in 30 minutes.
-
-## Prompt Flow
-
-| Step | User Prompt | What It Demonstrates | dbt Wizard Functionality |
-|---|---|---|---|
-| 0 | (Run in the terminal, not in Wizard) dbt run --select stg_products+ | Reproduces the failure live so the rest of the workflow is grounded in a real error message, not a hypothetical. | terminal — dbt run |
-| 1 | My dbt run just failed. Read the most recent run results and tell me which model failed, what the error was, and which upstream source or column the error references. | Reads run-results, parses the error, and names stg_products and the missing column brand — no scrolling stack traces. | status, dbt_show, error parsing |
-| 2 | Describe the current schema of retail.RET_PRODUCTS. List every column that exists today. | Pulls the live column list from Snowflake and converts "something changed" into "brand was renamed brand_name." | describe, warehouse |
-| 3 | Show me every model, source definition, and test in this project that references the product column brand. I need a complete blast-radius list before I change anything. | Maps the full product blast radius — stg_products and downstream intermediates and marts. This is a risk check, not a request to edit every downstream file. | search, lineage, impact analysis |
-| 4 | Update stg_products to read brand_name from retail.RET_PRODUCTS but keep the public column name as brand. Preserve the downstream contract so models that already select brand do not need to change. | Applies the alias-preserving staging fix. Public column brand is unchanged; no downstream model has to be edited. | file edit on staging model |
-| 5 | Compile stg_products and every downstream product model, then preview the first 10 rows of stg_products ordered deterministically by product_id. Do not materialize anything yet. | Compile across the lineage is the smoke test — any missed source-side brand reference fails here, not in the warehouse. Preview confirms brand_name is flowing through as brand. | dbt_compile, dbt_show |
-| 6 | (Run in the terminal, not in Wizard) dbt run --select stg_products+ | Closes the loop on the pre-step failure — green run confirms the fix end-to-end. | terminal — dbt run |
-
-## Expected Outcome
-
-* stg_products compiles and runs green.
-* All ~8 downstream models (intermediates and marts) resolve without further edits.
-* Public column brand preserved via select brand_name as brand.
-* Column tests in _staging__models.yml pass.
-* No source-side references to the missing RET_PRODUCTS.brand remain; public dbt column brand is preserved.
-
-## Business-to-Technical Link
-
-retail.RET_PRODUCTS.brand was renamed brand_name overnight and stg_products took down ~8 downstream models. dbt Wizard reads the error, surfaces brand_name in the live RET_PRODUCTS schema, maps every downstream dependency that relies on the public brand column, and applies select brand_name as brand in staging — broken pipeline to green re-run in minutes without changing downstream models.
