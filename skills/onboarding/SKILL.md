@@ -1,6 +1,11 @@
 ---
 name: onboarding
-description: Use this skill when the user is new to a dbt project and wants dbt Wizard to act as an onboarding buddy — giving them a guided tour of the codebase, the model layers, the lineage, the data, the tests, and ending with a small first-PR-style model they can ship. Triggers on natural-language phrasing like "I'm new to this dbt project", "help me onboard", "what does this project do", "give me a tour of the repo", "first week at a new job and I just got dbt access", "show me how the project is organized", "where do I start with this dbt project", "I just inherited this dbt project", "summarize this project for me", "I need to get familiar with this codebase and ship something small", or "walk me through this dbt repo". Use for the orient-a-new-engineer-on-an-unfamiliar-dbt-project workflow specifically — not for inventory or shipment problems (scenario-1), extending an existing model with a new source (scenario-2), customer segmentation (scenario-3), or upstream schema breakage (scenario-4). The other scenarios assume the attendee already knows the project; this one assumes Day 1.
+description: >
+  Use when a user wants a guided onboarding tour of an unfamiliar dbt project:
+  summarize what it does, map models by layer and domain, inspect lineage,
+  grain, tests, and data, then make a small safe first-PR-style change.
+  Triggers on prompts like "help me onboard", "summarize this dbt project",
+  "give me a repo tour", "where do I start", or "I just inherited this dbt project".
 ---
 
 # dbt Wizard - First-Week Onboarding Tour

@@ -8,3 +8,4 @@ profiles.yml
 .env
 
 .cortex/
+dbt_internal_packages/
