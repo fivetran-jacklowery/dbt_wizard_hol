@@ -23,7 +23,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['bronze', 'silver', 'gold', 'platinum']
+              arguments:
+                values: ['bronze', 'silver', 'gold', 'platinum']
       - name: has_ever_ordered
         description: True if the customer has placed at least one non-pending, non-cancelled order.
         tests:
@@ -53,7 +54,8 @@ models:
         description: Budget / mid-range / premium bucketing based on unit price.
         tests:
           - accepted_values:
-              values: ['budget', 'mid-range', 'premium']
+              arguments:
+                values: ['budget', 'mid-range', 'premium']
 
   - name: fct_orders
     description: >
@@ -70,15 +72,17 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_customers')
-              field: customer_id
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
               config:
                 severity: warn
       - name: order_status
         description: Current order status.
         tests:
           - accepted_values:
-              values: ['completed', 'returned', 'pending', 'cancelled', 'processing', 'shipped', 'delivered']
+              arguments:
+                values: ['completed', 'returned', 'pending', 'cancelled', 'processing', 'shipped', 'delivered']
       - name: total_amount
         description: Total billed to the customer including tax and shipping.
         tests:
@@ -99,8 +103,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('fct_orders')
-              field: order_id
+              arguments:
+                to: ref('fct_orders')
+                field: order_id
       - name: line_revenue
         description: Gross revenue for this line item before discount.
         tests:
@@ -128,12 +133,14 @@ models:
         description: Current status of the ticket.
         tests:
           - accepted_values:
-              values: ['open', 'in_progress', 'resolved', 'closed']
+              arguments:
+                values: ['open', 'in_progress', 'resolved', 'closed']
       - name: priority
         description: Ticket priority level.
         tests:
           - accepted_values:
-              values: ['low', 'medium', 'high', 'critical']
+              arguments:
+                values: ['low', 'medium', 'high', 'critical']
 
   - name: fct_inventory_transactions
     description: >
@@ -223,4 +230,5 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['no discount', 'light (<10%)', 'moderate (10–20%)', 'heavy (20%+)']
+              arguments:
+                values: ['no discount', 'light (<10%)', 'moderate (10–20%)', 'heavy (20%+)']
