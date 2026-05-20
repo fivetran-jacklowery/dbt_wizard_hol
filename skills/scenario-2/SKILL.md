@@ -43,6 +43,8 @@ Find int_orders_enriched in this project. Show me what it currently produces, it
 
 Exercises `search`, `describe`, and `lineage`. We start from the model we're being asked to extend, not from a blank file. Knowing the downstream consumers up front is what separates a safe edit from a Slack thread about a broken dashboard.
 
+For consistent current-state answers, use `references/enriched_orders_current_state_output_template.md`. Populate it from `search`, `describe`, `lineage`, the model SQL, and the model YAML. Use this structure for all outputs answering the Step 1 current-state prompt: model identity, grain, current emitted columns grouped by business role, direct downstream models, further downstream marts, and tests.
+
 When dbt Wizard returns, confirm in one line that `int_orders_enriched` exists, its grain is one row per order, and it has downstream consumers such as `fct_orders`, `fct_order_items`, `int_daily_revenue`, and customer/product rollups. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
