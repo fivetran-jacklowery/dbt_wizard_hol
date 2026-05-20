@@ -1,6 +1,11 @@
 ---
 name: onboarding
-description: Use this skill when the user is new to a dbt project and wants dbt Wizard to act as an onboarding buddy — giving them a guided tour of the codebase, the model layers, the lineage, the data, the tests, and ending with a small first-PR-style model they can ship. Triggers on natural-language phrasing like "I'm new to this dbt project", "help me onboard", "what does this project do", "give me a tour of the repo", "first week at a new job and I just got dbt access", "show me how the project is organized", "where do I start with this dbt project", "I just inherited this dbt project", "summarize this project for me", "I need to get familiar with this codebase and ship something small", or "walk me through this dbt repo". Use for the orient-a-new-engineer-on-an-unfamiliar-dbt-project workflow specifically — not for inventory or shipment problems (scenario-1), extending an existing model with a new source (scenario-2), customer segmentation (scenario-3), or upstream schema breakage (scenario-4). The other scenarios assume the attendee already knows the project; this one assumes Day 1.
+description: >
+  Use when a user wants a guided onboarding tour of an unfamiliar dbt project:
+  summarize what it does, map models by layer and domain, inspect lineage,
+  grain, tests, and data, then make a small safe first-PR-style change.
+  Triggers on prompts like "help me onboard", "summarize this dbt project",
+  "give me a repo tour", "where do I start", or "I just inherited this dbt project".
 ---
 
 # dbt Wizard - First-Week Onboarding Tour
@@ -22,6 +27,12 @@ Never tell the user to "say next," "paste your output here," "ready for the next
 
 If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
 
+### Output formatting for data samples
+
+When a step asks dbt Wizard to show sample rows or distinct values, instruct it to render results with `submit_table`.
+
+For wide models, do not ask for every column in the table widget. Ask for a representative subset of key columns so headers stay readable. Prefer identifiers, dates, status fields, primary measures, and 1-2 useful flags. Render distinct-value summaries in a separate `submit_table`.
+
 ---
 
 ## Step 1 - Project summary
@@ -34,6 +45,8 @@ Summarize what this dbt project does. What are the main subject areas and how is
 
 Exercises project-level `status` and repo summarization. We start from the top, not from a model and not from a folder. The user does not need to read the README, scroll the file tree, or guess at the domain. dbt Wizard reads the project as a whole and returns the elevator pitch: what business this is, what the major subject areas are (customers, orders, products, stores, inventory, etc.), and how the project is layered (staging, intermediate, marts).
 
+For consistent answers to project-summary prompts, use `references/project_summary_output_template.md`. Populate it from `status`, `search`, `dbt_project.yml`, and the model tree; do not hard-code counts unless they were just retrieved.
+
 When the response returns, confirm in one line that the user can name the business domain and the layering convention. If dbt Wizard surfaces a layer the user wasn't expecting (e.g., a `snapshots/` directory or a `seeds/` folder), note it now. Every later step is easier when the full shape of the project is named up front. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
@@ -45,6 +58,8 @@ List the staging, intermediate, and mart models. Group them by domain.
 ## Step 2 - Inventory the models
 
 Exercises `search` plus folder and tag grouping. This is where the project goes from "a folder I just cloned" to "a map I can read." dbt Wizard returns the model list bucketed two ways at once, by layer (staging vs. intermediate vs. mart) and by domain (customers, orders, products, etc.), so the user can see both axes of the project on one screen.
+
+For consistent answers to model-inventory prompts, use `references/model_inventory_output_template.md`. Populate it from `status`, `search`, `dbt_project.yml`, and the model tree; mention failed compile state if the current session has one.
 
 When the list returns, confirm in one line:
 
@@ -64,6 +79,8 @@ Show me the lineage, grain, and key columns for the orders mart model.
 
 Exercises `describe` and `lineage`. We pick the orders mart specifically because it sits at the busiest intersection of the project. Every retail dbt project has an orders fact, and it tends to be the model with the widest upstream lineage and the most downstream consumers. If the user can read this one model, they can read any of the others.
 
+For consistent answers to mart deep-dive prompts, use `references/mart_lineage_grain_output_template.md`. Populate it from `search`, `describe`, `lineage`, the model SQL, and the model YAML. In the upstream staging section, list each staging model with its source table in the same row so the lineage is visible in one place.
+
 When the response returns, confirm in one line:
 
 - The **grain** of the orders mart. Is it one row per order, one row per order line, or one row per order x something else?
@@ -73,7 +90,7 @@ When the response returns, confirm in one line:
 The grain question is the one most new engineers skip and then regret. Naming it out loud here saves an hour later when a join produces a row count that doesn't match expectations. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Show me a 10-row sample of the orders mart and the distinct values in the order_status column.
+Show me a 10-row sample of the orders mart and the distinct values in the order_status column. Use submit_table for both outputs. For the sample, show a representative subset of key columns so the table is readable.
 ```
 
 ---
@@ -164,3 +181,6 @@ Done by hand, the everyday first-week onboarding takes most engineers a week or 
 ## References
 
 - `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
+- `references/mart_lineage_grain_output_template.md`: output format for mart lineage, grain, key columns, and upstream staging/source mapping.
+- `references/model_inventory_output_template.md`: output format for listing staging, intermediate, and mart models by domain.
+- `references/project_summary_output_template.md`: output format for project-summary answers.
