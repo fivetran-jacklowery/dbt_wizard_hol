@@ -57,6 +57,8 @@ Find every support-ticket source or model in this project that int_orders_enrich
 
 Exercises `status`, `search`, and source-vs-model cross-referencing. This is the step that earns the workflow: dbt Wizard surfaces a Fivetran-synced source already configured in the project but not connected to the target model. No need to spelunk through `_staging__sources.yml` or guess what's been added since the last time anyone looked.
 
+For consistent ticket-discovery answers, use `references/ticket_data_discovery_output_template.md`. Populate it from `search`, `lineage`, `describe`, the ticket model SQL, and warehouse checks for `stg_tickets.order_id` coverage against `int_orders_enriched`. Use this structure for all outputs answering the Step 2 discovery prompt: current enriched-orders upstream, disconnected ticket assets, current ticket flow, and the order-linkage caveat.
+
 When dbt Wizard returns the candidate source, confirm in one line that `retail.RET_TICKETS` exists, is staged as `stg_tickets`, includes `order_id`, and is not currently referenced by `int_orders_enriched`. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
@@ -80,6 +82,8 @@ Tell dbt Wizard to confirm each of these directly:
 ```
 Run a quick check: count rows in stg_tickets with a non-null order_id, count distinct ticket order_ids, and count how many of those order_ids match an order_id in int_orders_enriched. Tell me whether stg_tickets is one-to-one or one-to-many at the order grain.
 ```
+
+For consistent join-validation answers, use `references/ticket_order_join_validation_output_template.md`. Populate it from read-only warehouse checks against `stg_tickets` and `int_orders_enriched`. Use this structure for all outputs answering the Step 3 validation prompt: non-null ticket `order_id` count, distinct ticket order IDs, matched rows/orders, and the cardinality classification.
 
 If the grain is many-rows-per-order, aggregate tickets to one row per `order_id` before joining. The required metrics are `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status`.
 
@@ -152,3 +156,6 @@ Done by hand, the everyday extend-an-existing-model task takes half a day of gre
 ## References
 
 - `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
+- `references/enriched_orders_current_state_output_template.md`: output format for locating `int_orders_enriched`, its grain, current emitted columns, and downstream consumers.
+- `references/ticket_data_discovery_output_template.md`: output format for finding ticket data that exists in the warehouse but is not connected to `int_orders_enriched`.
+- `references/ticket_order_join_validation_output_template.md`: output format for validating `stg_tickets.order_id` coverage and cardinality against `int_orders_enriched`.
