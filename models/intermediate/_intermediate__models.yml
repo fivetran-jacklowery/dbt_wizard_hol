@@ -55,7 +55,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['budget', 'mid-range', 'premium']
+              arguments:
+                values: ['budget', 'mid-range', 'premium']
 
   - name: int_customer_order_summary
     description: >
