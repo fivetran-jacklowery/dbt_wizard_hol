@@ -34,6 +34,8 @@ Summarize what this dbt project does. What are the main subject areas and how is
 
 Exercises project-level `status` and repo summarization. We start from the top, not from a model and not from a folder. The user does not need to read the README, scroll the file tree, or guess at the domain. dbt Wizard reads the project as a whole and returns the elevator pitch: what business this is, what the major subject areas are (customers, orders, products, stores, inventory, etc.), and how the project is layered (staging, intermediate, marts).
 
+For consistent answers to project-summary prompts, use `references/project_summary_output_template.md`. Populate it from `status`, `search`, `dbt_project.yml`, and the model tree; do not hard-code counts unless they were just retrieved.
+
 When the response returns, confirm in one line that the user can name the business domain and the layering convention. If dbt Wizard surfaces a layer the user wasn't expecting (e.g., a `snapshots/` directory or a `seeds/` folder), note it now. Every later step is easier when the full shape of the project is named up front. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
