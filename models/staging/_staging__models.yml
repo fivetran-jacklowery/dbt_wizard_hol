@@ -36,8 +36,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_customers')
-              field: customer_id
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
               config:
                 severity: warn
       - name: order_status
@@ -45,7 +46,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['completed', 'returned', 'pending', 'cancelled', 'processing', 'shipped', 'delivered']
+              arguments:
+                values: ['completed', 'returned', 'pending', 'cancelled', 'processing', 'shipped', 'delivered']
       - name: order_date
         description: Timestamp when the order was placed.
         tests:
@@ -68,8 +70,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_orders')
-              field: order_id
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
               config:
                 severity: warn
       - name: product_id
@@ -77,8 +80,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_products')
-              field: product_id
+              arguments:
+                to: ref('stg_products')
+                field: product_id
               config:
                 severity: warn
       - name: quantity
@@ -108,8 +112,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_product_subcategories')
-              field: subcategory_id
+              arguments:
+                to: ref('stg_product_subcategories')
+                field: subcategory_id
               config:
                 severity: warn
       - name: unit_price
@@ -143,8 +148,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_product_categories')
-              field: category_id
+              arguments:
+                to: ref('stg_product_categories')
+                field: category_id
               config:
                 severity: warn
       - name: subcategory_name
@@ -165,8 +171,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_products')
-              field: product_id
+              arguments:
+                to: ref('stg_products')
+                field: product_id
               config:
                 severity: warn
       - name: customer_id
@@ -174,8 +181,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_customers')
-              field: customer_id
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
               config:
                 severity: warn
       - name: rating
@@ -183,7 +191,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: [1, 2, 3, 4, 5]
+              arguments:
+                values: [1, 2, 3, 4, 5]
 
   - name: stg_inventory
     description: Staged current inventory levels per product per warehouse from RET_INVENTORY. Soft-deleted rows excluded.
@@ -198,8 +207,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_products')
-              field: product_id
+              arguments:
+                to: ref('stg_products')
+                field: product_id
               config:
                 severity: warn
       - name: warehouse_id
@@ -207,8 +217,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_warehouses')
-              field: warehouse_id
+              arguments:
+                to: ref('stg_warehouses')
+                field: warehouse_id
               config:
                 severity: warn
       - name: quantity_on_hand
@@ -229,8 +240,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_products')
-              field: product_id
+              arguments:
+                to: ref('stg_products')
+                field: product_id
               config:
                 severity: warn
       - name: warehouse_id
@@ -238,8 +250,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_warehouses')
-              field: warehouse_id
+              arguments:
+                to: ref('stg_warehouses')
+                field: warehouse_id
               config:
                 severity: warn
       - name: transaction_type
@@ -264,14 +277,16 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['percent', 'fixed']
+              arguments:
+                values: ['percent', 'fixed']
       - name: applicable_category_id
         description: Foreign key to stg_product_categories — category this promotion applies to.
         tests:
           - not_null
           - relationships:
-              to: ref('stg_product_categories')
-              field: category_id
+              arguments:
+                to: ref('stg_product_categories')
+                field: category_id
               config:
                 severity: warn
 
@@ -288,8 +303,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_customers')
-              field: customer_id
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
               config:
                 severity: warn
       - name: issue_type
@@ -301,13 +317,15 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['low', 'medium', 'high', 'critical']
+              arguments:
+                values: ['low', 'medium', 'high', 'critical']
       - name: ticket_status
         description: Current resolution status (lowercased).
         tests:
           - not_null
           - accepted_values:
-              values: ['open', 'in_progress', 'resolved', 'closed']
+              arguments:
+                values: ['open', 'in_progress', 'resolved', 'closed']
 
   - name: stg_warehouses
     description: Staged warehouse locations from RET_WAREHOUSES. Soft-deleted rows excluded.
