@@ -59,6 +59,8 @@ List the staging, intermediate, and mart models. Group them by domain.
 
 Exercises `search` plus folder and tag grouping. This is where the project goes from "a folder I just cloned" to "a map I can read." dbt Wizard returns the model list bucketed two ways at once, by layer (staging vs. intermediate vs. mart) and by domain (customers, orders, products, etc.), so the user can see both axes of the project on one screen.
 
+For consistent answers to model-inventory prompts, use `references/model_inventory_output_template.md`. Populate it from `status`, `search`, `dbt_project.yml`, and the model tree; mention failed compile state if the current session has one.
+
 When the list returns, confirm in one line:
 
 - The staging layer has roughly one model per source table. That's the convention, and a violation here is a tell.
@@ -76,6 +78,8 @@ Show me the lineage, grain, and key columns for the orders mart model.
 ## Step 3 - Deep-dive on one mart
 
 Exercises `describe` and `lineage`. We pick the orders mart specifically because it sits at the busiest intersection of the project. Every retail dbt project has an orders fact, and it tends to be the model with the widest upstream lineage and the most downstream consumers. If the user can read this one model, they can read any of the others.
+
+For consistent answers to mart deep-dive prompts, use `references/mart_lineage_grain_output_template.md`. Populate it from `search`, `describe`, `lineage`, the model SQL, and the model YAML. In the upstream staging section, list each staging model with its source table in the same row so the lineage is visible in one place.
 
 When the response returns, confirm in one line:
 
@@ -177,3 +181,6 @@ Done by hand, the everyday first-week onboarding takes most engineers a week or 
 ## References
 
 - `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
+- `references/mart_lineage_grain_output_template.md`: output format for mart lineage, grain, key columns, and upstream staging/source mapping.
+- `references/model_inventory_output_template.md`: output format for listing staging, intermediate, and mart models by domain.
+- `references/project_summary_output_template.md`: output format for project-summary answers.
