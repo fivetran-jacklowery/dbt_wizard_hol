@@ -27,6 +27,12 @@ Never tell the user to "say next," "paste your output here," "ready for the next
 
 If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
 
+### Output formatting for data samples
+
+When a step asks dbt Wizard to show sample rows or distinct values, instruct it to render results with `submit_table`.
+
+For wide models, do not ask for every column in the table widget. Ask for a representative subset of key columns so headers stay readable. Prefer identifiers, dates, status fields, primary measures, and 1-2 useful flags. Render distinct-value summaries in a separate `submit_table`.
+
 ---
 
 ## Step 1 - Project summary
@@ -80,7 +86,7 @@ When the response returns, confirm in one line:
 The grain question is the one most new engineers skip and then regret. Naming it out loud here saves an hour later when a join produces a row count that doesn't match expectations. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
 
 ```
-Show me a 10-row sample of the orders mart and the distinct values in the order_status column.
+Show me a 10-row sample of the orders mart and the distinct values in the order_status column. Use submit_table for both outputs. For the sample, show a representative subset of key columns so the table is readable.
 ```
 
 ---
