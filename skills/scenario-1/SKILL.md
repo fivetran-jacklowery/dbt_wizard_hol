@@ -1,6 +1,6 @@
 ---
 name: scenario-1
-description: Use this skill when the user is investigating inventory shortages, missing shipments, overages, undercounts, or stores that received the wrong stock allocation, and wants dbt Wizard to find where the inventory went. Triggers on natural-language phrasing like "where did our missing inventory go", "which stores got too much of an item", "which stores are short inventory", "find stores above or below expected stock", "find the stores that received excess stock", "investigate a shipment misallocation", "we shipped wrong inventory amounts before a sale", "stores have more or less inventory than they should", "track down a missing shipment", or "some stores received extra inventory and we need to find them". Use for inventory/shipment/store-allocation problems specifically — not for product quality or returns issues (that is scenario-2), and not for customer segmentation or marketing questions (that is scenario-3).
+description: Use this skill when the user is investigating inventory shortages, missing shipments, overages, undercounts, or stores that received the wrong stock allocation, and wants dbt Wizard to find where the inventory went. Triggers on natural-language phrasing like "where did our missing inventory go", "which stores got too much of an item", "which stores are short inventory", "find stores above or below expected stock", "find the stores that received excess stock", "investigate a shipment misallocation", "we shipped wrong inventory amounts before a sale", "stores have more or less inventory than they should", "track down a missing shipment", or "some stores received extra inventory and we need to find them". Use for inventory/shipment/store-allocation problems specifically — not for support-ticket enrichment on orders (that is scenario-2), and not for customer segmentation or marketing questions (that is scenario-3).
 ---
 
 # dbt Wizard — Inventory Misallocation Investigation
@@ -22,7 +22,11 @@ For every step:
 
 Never tell the user to "say next," "paste your output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order.
 
-If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
+### Continuation behavior
+
+The first prompt starts the inventory misallocation story for the current chat session. After that, do not make the user restate the business scenario. Treat short follow-up prompts about inventory/store/item/shipment grain, expected-versus-actual inventory, variance direction, `inventory_shipment_variance`, deterministic preview, or materialization as continuation of this investigation unless the user clearly changes tasks.
+
+The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm investigating inventory misallocation at the variance preview step."
 
 ---
 
@@ -31,7 +35,7 @@ If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_set
 Ask dbt Wizard — copy this as written (recommended), or rephrase it in your own words:
 
 ```
-Find the models in this project related to inventory, stores, items, and shipments.
+Operations thinks inventory was misallocated across stores before a sale. Find the models in this project related to inventory, stores, items, and shipments.
 ```
 
 Exercises `status` and `search`. We start from the business problem, not the file tree. The user does not need to know schema names or directory layout in advance — that is the entire point.
@@ -112,9 +116,3 @@ When the build succeeds, close with one line: the user took a stakeholder questi
 ## Final artifact
 
 - Model: `inventory_shipment_variance` — one row per misallocated store/item where actual inventory differs from expected, in the participant's dev schema
-
----
-
-## References
-
-- `references/dbt_wizard_setup.md` — install, run, config, and auth requirements for dbt Wizard.

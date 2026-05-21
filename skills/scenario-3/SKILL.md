@@ -1,6 +1,6 @@
 ---
 name: scenario-3
-description: Use this skill when the user is building a customer segmentation model, identifying VIPs or high-value customers, or creating a targeted campaign audience for Marketing using recent purchase behavior by store. Triggers on natural-language phrases like "build a customer segment for Marketing", "who are our VIPs", "find high-value customers by store", "I need a targeted campaign audience", "segment customers by spend and loyalty", "180-day customer activity by store", "identify category-loyal customers", or "build a big-spender segment". Use this skill specifically for the customers × stores × orders × categories segmentation workflow — not for inventory or shipment problems (that is scenario-1), and not for product quality or vendor return-rate work (that is scenario-2).
+description: Use this skill when the user is building a customer segmentation model, identifying VIPs or high-value customers, or creating a targeted campaign audience for Marketing using recent purchase behavior by store. Triggers on natural-language phrases like "build a customer segment for Marketing", "who are our VIPs", "find high-value customers by store", "I need a targeted campaign audience", "segment customers by spend and loyalty", "180-day customer activity by store", "identify category-loyal customers", or "build a big-spender segment". Use this skill specifically for the customers × stores × orders × categories segmentation workflow — not for inventory or shipment problems (that is scenario-1), and not for support-ticket enrichment on orders (that is scenario-2).
 ---
 
 # dbt Wizard — High-Value Customer Segmentation
@@ -18,7 +18,11 @@ For every step:
 
 Never invite the user to "say next," "paste output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order; do not skip ahead.
 
-If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
+### Continuation behavior
+
+The first prompt starts the Marketing customer-segmentation story for the current chat session. After that, do not make the user restate the campaign audience goal. Treat short follow-up prompts about customers, stores, orders, order lines, products, categories, 180-day activity, VIPs, big spenders, category-loyal customers, segment preview, or materialization as continuation of this workflow unless the user clearly changes tasks.
+
+The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm building the Marketing customer segment at the activity-model step."
 
 ---
 
@@ -27,7 +31,7 @@ If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_set
 Ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
 ```
-Find the models related to customers, stores, orders, order lines, products, and categories.
+Marketing needs a targeted customer segment based on recent purchase behavior by store. Find the models related to customers, stores, orders, order lines, products, and categories.
 ```
 
 Exercises `status` and `search`. Six entity types — wider than the other scenarios — which is exactly why discovery has to happen before any SQL.
@@ -137,9 +141,3 @@ When the build succeeds, confirm the model landed in the user's dev schema and t
 ## Wrap-up
 
 In two or three sentences: the user took a Marketing question — *"which customers should we target?"* — and used dbt Wizard to discover six entity types, validate grain and joins, inspect the data for a fresh date anchor, build a reusable activity layer, build a segment model on top of it, safely preview the audience, and materialize the result into their own dev schema. The campaign list now sits on a reusable, testable two-model design — not a screenshot of a query somebody ran once. That is what an analytics-engineering workflow looks like.
-
----
-
-## References
-
-- `references/dbt_wizard_setup.md` — install, run, config, and auth requirements for dbt Wizard.

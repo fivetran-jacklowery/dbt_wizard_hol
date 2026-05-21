@@ -1,6 +1,6 @@
 ---
 name: scenario-4
-description: Use this skill when the user is investigating a broken dbt model caused by an upstream source schema change — specifically `retail.RET_PRODUCTS.brand` being renamed to `brand_name` — and wants dbt Wizard to help diagnose and fix it. Triggers on natural-language phrasing like "my dbt run is failing", "this model used to work and now doesn't", "the product source changed and broke my model", "brand column not found after a Fivetran sync", "help me figure out which product column was renamed", "fix stg_products", "brand was renamed upstream and I need to find every reference", or "dbt run errored after the products source schema changed". Use for upstream product-source schema drift specifically — not for inventory or shipment problems (scenario-1), product quality/source-extension work (scenario-2), or customer segmentation (scenario-3).
+description: Use this skill when the user is investigating a broken dbt model caused by an upstream source schema change — specifically `retail.RET_PRODUCTS.brand` being renamed to `brand_name` — and wants dbt Wizard to help diagnose and fix it. Triggers on natural-language phrasing like "my dbt run is failing", "this model used to work and now doesn't", "the product source changed and broke my model", "brand column not found after a Fivetran sync", "help me figure out which product column was renamed", "fix stg_products", "brand was renamed upstream and I need to find every reference", or "dbt run errored after the products source schema changed". Use for upstream product-source schema drift specifically — not for inventory or shipment problems (scenario-1), support-ticket enrichment on orders (scenario-2), or customer segmentation (scenario-3).
 ---
 
 # dbt Wizard - Broken Product Model from a Source Column Rename
@@ -29,7 +29,11 @@ For every step:
 
 Never tell the user to "say next," "paste your output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order.
 
-If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
+### Continuation behavior
+
+The first prompt starts the product source schema-drift story for the current chat session. After that, do not make the user restate the column-rename context. Treat short follow-up prompts about `stg_products`, `retail.RET_PRODUCTS`, `brand`, `brand_name`, product blast radius, alias preservation, product-lineage compile, preview, or re-run as continuation of this workflow unless the user clearly changes tasks.
+
+The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm fixing product source schema drift at the blast-radius step."
 
 ---
 
@@ -52,7 +56,7 @@ They will see a compile or runtime error referencing `brand`. Capture the exact 
 Ask dbt Wizard - copy this as written (recommended), or rephrase it in your own words:
 
 ```
-My dbt run just failed. Read the most recent run results and tell me which model failed, what the error was, and which upstream source or column the error references.
+My dbt run just failed after a product source schema change. Read the most recent run results and tell me which model failed, what the error was, and which upstream source or column the error references.
 ```
 
 Exercises `status`, `dbt_show` against `run-results`, and error parsing. We start from the failure, not from a hunch. No need to scroll through stack traces in the terminal. dbt Wizard surfaces the model name, the failing column, and the source it traces back to.
@@ -143,5 +147,4 @@ That's the everyday analytics-engineering problem dbt Wizard exists to solve: up
 
 ## References
 
-- `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
 - `references/instructor_setup.md`: how the instructor applies the `brand` to `brand_name` source column rename in Snowflake before the lab.

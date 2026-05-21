@@ -29,7 +29,11 @@ For every step:
 
 Never tell the user to "say next," "paste your output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order.
 
-If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
+### Continuation behavior
+
+The first prompt starts the support-ticket enrichment story for the current chat session. After that, do not make the user restate that they are extending enriched orders. Treat short follow-up prompts about `int_orders_enriched`, `stg_tickets`, ticket sources, `order_id` join coverage, ticket aggregation, downstream compile, preview, or materialization as continuation of this workflow unless the user clearly changes tasks.
+
+The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm adding support-ticket context to enriched orders at the join validation step."
 
 ---
 
@@ -38,7 +42,7 @@ If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_set
 Ask dbt Wizard - copy this as written (recommended), or rephrase it in your own words:
 
 ```
-Find int_orders_enriched in this project. Show me what it currently produces, its grain, and which models depend on it downstream.
+I need to add support-ticket context to enriched orders without breaking downstream consumers. Find int_orders_enriched in this project. Show me what it currently produces, its grain, and which models depend on it downstream.
 ```
 
 Exercises `search`, `describe`, and `lineage`. We start from the model we're being asked to extend, not from a blank file. Knowing the downstream consumers up front is what separates a safe edit from a Slack thread about a broken dashboard.
@@ -155,7 +159,6 @@ Done by hand, the everyday extend-an-existing-model task takes half a day of gre
 
 ## References
 
-- `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
 - `references/enriched_orders_current_state_output_template.md`: output format for locating `int_orders_enriched`, its grain, current emitted columns, and downstream consumers.
 - `references/ticket_data_discovery_output_template.md`: output format for finding ticket data that exists in the warehouse but is not connected to `int_orders_enriched`.
 - `references/ticket_order_join_validation_output_template.md`: output format for validating `stg_tickets.order_id` coverage and cardinality against `int_orders_enriched`.
