@@ -95,13 +95,13 @@ nothing to commit, working tree clean
 Run the DDL script first:
 
 ```sql
--- lab_scripts/ddl.sql
+-- lab_reference/lab_scripts/ddl.sql
 ```
 
 Then run the DML script:
 
 ```sql
--- lab_scripts/dml.sql
+-- lab_reference/lab_scripts/dml.sql
 ```
 
 These scripts reset and repopulate:

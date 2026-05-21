@@ -162,20 +162,9 @@ Once you have their email:
 Write `~/.dbt/profiles.yml`:
 
 ```yaml
-dbt_hands_on_lab_profile:
+dbt_hands_on_lab_aws:
   outputs:
     dev:
-      account: GQ81837-SALES_ENG_TESTING_AWS
-      database: snowflake_summit_2026_hol_db
-      private_key_passphrase: <their passphrase>
-      private_key_path: /Users/<username>/.ssh/rsa_key.p8
-      role: lab_user_role
-      schema: <first_last>_dev
-      threads: 4
-      type: snowflake
-      user: <their email>
-      warehouse: default
-    prod:
       account: GQ81837-SALES_ENG_TESTING_AWS
       database: snowflake_summit_2026_hol_db
       private_key_passphrase: <their passphrase>

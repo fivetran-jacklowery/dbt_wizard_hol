@@ -56,4 +56,4 @@ Without this, dbt Wizard's `dbt_show` and `dbt_compile` tools may fail to retrie
 - **"command not found: dbt-wizard"**: Re-run the install script, or check that the install location is on your `PATH`.
 - **Auth errors when running a prompt**: Re-run `gcloud auth application-default login`. ADC tokens expire.
 - **`dbt_show` returns no rows but the table has data**: Check that your dbt profile points at the right warehouse/schema, and that `run-cache` is installed in the active venv.
-- **Scenario 4, `dbt run` succeeds when it should fail**: The instructor's pre-lab column rename did not apply for your user. See `instructor_setup.md` and re-run the rename SQL against your dev schema.
+- **Scenario 3, `dbt run` succeeds when it should fail**: The instructor's pre-lab column rename did not apply for your user. See `instructor_setup.md` and re-run the rename SQL against your dev schema.

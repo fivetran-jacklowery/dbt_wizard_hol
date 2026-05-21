@@ -1,7 +1,7 @@
 name: 'dbt_wizard_hol'
 version: '1.0.0'
 
-profile: 'dbt_hands_on_lab_profile'
+profile: 'dbt_hands_on_lab_aws'
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]

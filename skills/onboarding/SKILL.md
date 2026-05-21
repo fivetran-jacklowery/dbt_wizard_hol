@@ -25,7 +25,11 @@ For every step:
 
 Never tell the user to "say next," "paste your output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order.
 
-If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
+### Continuation behavior
+
+The first prompt starts the onboarding story for the current chat session. After that, do not make the user restate that they are onboarding. Treat short follow-up prompts about model inventory, orders mart lineage, orders mart samples, orders tests, `orders_by_week`, or compile/preview as continuation of this onboarding tour unless the user clearly changes tasks.
+
+The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm in the onboarding tour at the orders mart sample step."
 
 ### Output formatting for data samples
 
@@ -40,7 +44,7 @@ For wide models, do not ask for every column in the table widget. Ask for a repr
 Ask dbt Wizard - copy this as written (recommended), or rephrase it in your own words:
 
 ```
-Summarize what this dbt project does. What are the main subject areas and how is the project organized?
+I'm a new analytics engineer onboarding to this dbt project. Summarize what it does, the main subject areas, and how it is organized.
 ```
 
 Exercises project-level `status` and repo summarization. We start from the top, not from a model and not from a folder. The user does not need to read the README, scroll the file tree, or guess at the domain. dbt Wizard reads the project as a whole and returns the elevator pitch: what business this is, what the major subject areas are (customers, orders, products, stores, inventory, etc.), and how the project is layered (staging, intermediate, marts).
@@ -180,7 +184,7 @@ Done by hand, the everyday first-week onboarding takes most engineers a week or 
 
 ## References
 
-- `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
+- `lab_reference/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
 - `references/mart_lineage_grain_output_template.md`: output format for mart lineage, grain, key columns, and upstream staging/source mapping.
 - `references/model_inventory_output_template.md`: output format for listing staging, intermediate, and mart models by domain.
 - `references/project_summary_output_template.md`: output format for project-summary answers.
