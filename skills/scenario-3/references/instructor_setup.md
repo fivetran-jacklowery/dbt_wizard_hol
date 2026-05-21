@@ -1,6 +1,6 @@
-# Scenario 4 - Instructor Setup
+# Scenario 3 - Instructor Setup
 
-Scenario 4 demonstrates dbt Wizard fixing a product model that's broken by an upstream column rename. For the attendee to see a real failure, the rename must be applied to the source table **before they run `dbt run`**.
+Scenario 3 demonstrates dbt Wizard fixing a product model that's broken by an upstream column rename. For the attendee to see a real failure, the rename must be applied to the source table **before they run `dbt run`**.
 
 This scenario uses the product-source rename: `retail.RET_PRODUCTS.brand` is renamed to `brand_name`.
 

@@ -1,4 +1,4 @@
-# dbt Wizard — Setup Reference
+# dbt Wizard - Setup Reference
 
 Quick reference for installing, configuring, and running dbt Wizard before starting an investigation workflow.
 
@@ -53,6 +53,7 @@ Without this, dbt Wizard's `dbt_show` and `dbt_compile` tools may fail to retrie
 
 ## Troubleshooting
 
-- **"command not found: dbt-wizard"** — Re-run the install script, or check that the install location is on your `PATH`.
-- **Auth errors when running a prompt** — Re-run `gcloud auth application-default login`. ADC tokens expire.
-- **`dbt_show` returns no rows but the table has data** — Check that your dbt profile points at the right warehouse/schema, and that `run-cache` is installed in the active venv.
+- **"command not found: dbt-wizard"**: Re-run the install script, or check that the install location is on your `PATH`.
+- **Auth errors when running a prompt**: Re-run `gcloud auth application-default login`. ADC tokens expire.
+- **`dbt_show` returns no rows but the table has data**: Check that your dbt profile points at the right warehouse/schema, and that `run-cache` is installed in the active venv.
+- **Scenario 3, `dbt run` succeeds when it should fail**: The instructor's pre-lab column rename did not apply for your user. See `instructor_setup.md` and re-run the rename SQL against your dev schema.

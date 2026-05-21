@@ -1,147 +1,145 @@
 ---
 name: scenario-4
-description: Use this skill when the user is investigating a broken dbt model caused by an upstream source schema change — specifically `retail.RET_PRODUCTS.brand` being renamed to `brand_name` — and wants dbt Wizard to help diagnose and fix it. Triggers on natural-language phrasing like "my dbt run is failing", "this model used to work and now doesn't", "the product source changed and broke my model", "brand column not found after a Fivetran sync", "help me figure out which product column was renamed", "fix stg_products", "brand was renamed upstream and I need to find every reference", or "dbt run errored after the products source schema changed". Use for upstream product-source schema drift specifically — not for inventory or shipment problems (scenario-1), product quality/source-extension work (scenario-2), or customer segmentation (scenario-3).
+description: Use this skill when the user is building a customer segmentation model, identifying VIPs or high-value customers, or creating a targeted campaign audience for Marketing using recent purchase behavior by store. Triggers on natural-language phrases like "build a customer segment for Marketing", "who are our VIPs", "find high-value customers by store", "I need a targeted campaign audience", "segment customers by spend and loyalty", "180-day customer activity by store", "identify category-loyal customers", or "build a big-spender segment". Use this skill specifically for the customers × stores × orders × categories segmentation workflow — not for inventory or shipment problems (that is scenario-1), and not for product quality or vendor return-rate work (that is scenario-2).
 ---
 
-# dbt Wizard - Broken Product Model from a Source Column Rename
+# dbt Wizard — High-Value Customer Segmentation
 
-A five-step workflow that turns a red `dbt run` (`Column 'BRAND' does not exist in source`) into a fixed, re-running pipeline. No grep-and-pray across the project, no manual `DESC TABLE` against the warehouse, no guessing which downstream models also break.
-
-The setup: the Fivetran-synced `retail.RET_PRODUCTS` source column `brand` was renamed upstream to `brand_name` overnight. `stg_products` still selects `brand`, so the product lineage is broken. You need to find what changed, find every place the old name was referenced, fix the staging contract, and re-run before the morning standup.
+A seven-step workflow that turns *"which customers should Marketing target?"* into a reusable activity layer plus a segment model, materialized into the user's dev schema. Two-model design on purpose: the activity layer is testable and reusable so downstream work (churn, RFM, dashboards) does not re-derive the same aggregates from scratch.
 
 ## How to run this skill
 
-This scenario uses this fixed setup:
-
-- **Broken model:** `stg_products`
-- **Upstream source:** `retail.RET_PRODUCTS`
-- **Old source column:** `brand`
-- **New source column:** `brand_name`
-- **Public dbt column contract to preserve:** `brand`
-- **Expected blast radius:** `stg_products.sql` plus product downstream models including `int_inventory_status`, `int_order_items_enriched`, `int_product_sales_summary`, `int_products_enriched`, `dim_products`, `fct_inventory_transactions`, `fct_order_items`, and `agg_product_performance`.
-
 For every step:
 
-1. Show the user the question to ask dbt Wizard inside a plain fenced code block, with no quoting or decoration, so it can be copied cleanly or read off a printed lab sheet.
-2. Always frame the question as *"copy this as written, or rephrase it in your own words"*. Copy-as-written is recommended for the timed lab.
+1. Present the question for dbt Wizard inside a plain fenced code block — no quoting, no decoration, so the user can triple-click and copy or type it off a printed lab sheet.
+2. Always frame the question as *"copy this as written, or rephrase it in your own words"* — give the user the explicit choice between using the canonical version and paraphrasing. Either path is correct; the lab is about the workflow, not the wording.
 3. State briefly what dbt Wizard exercises under the hood.
-4. After dbt Wizard responds, interpret in one or two lines what the user now knows. Do not restate dbt Wizard's output. Name the *insight*, then surface the next question in another plain code block, again with the copy-or-rephrase framing.
+4. After dbt Wizard responds, interpret in one or two lines what the user can now do. Do not restate dbt Wizard's output — name the *insight* the user just earned. Then surface the next question in another plain code block, again with the copy-or-rephrase framing.
 
-Never tell the user to "say next," "paste your output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order.
+Never invite the user to "say next," "paste output here," "ready for the next step," or anything similar. They advance by typing each business question themselves. Run the steps in order; do not skip ahead.
 
 If dbt Wizard is not yet configured, send the user to `references/dbt_wizard_setup.md` before Step 1.
 
 ---
 
-## Pre-step - Reproduce the failure
+## Step 1 — Discovery
 
-The lab environment was set up with the product column rename already applied to the source table, so the first thing the user does is run dbt and watch it fail. This grounds the rest of the workflow in a real error message, not a hypothetical.
-
-Tell the user to run, from the project root:
+Ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
 ```
-dbt run --select stg_products+
+Find the models related to customers, stores, orders, order lines, products, and categories.
 ```
 
-They will see a compile or runtime error referencing `brand`. Capture the exact error text. Step 1 uses it.
+Exercises `status` and `search`. Six entity types — wider than the other scenarios — which is exactly why discovery has to happen before any SQL.
 
----
-
-## Step 1 - Explain the failure
-
-Ask dbt Wizard - copy this as written (recommended), or rephrase it in your own words:
+When the response comes back, confirm all six domains surfaced. Two are commonly missed: a dedicated **categories** model (sometimes category lives only as a column on products) and a separate **order lines** model (sometimes folded into orders). Name either before moving on — the downstream logic depends on it. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
 ```
-My dbt run just failed. Read the most recent run results and tell me which model failed, what the error was, and which upstream source or column the error references.
-```
-
-Exercises `status`, `dbt_show` against `run-results`, and error parsing. We start from the failure, not from a hunch. No need to scroll through stack traces in the terminal. dbt Wizard surfaces the model name, the failing column, and the source it traces back to.
-
-When dbt Wizard returns its summary, confirm in one line that the failing model is `stg_products` and the missing column is `brand` on the `retail.RET_PRODUCTS` source. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
-
-```
-Describe the current schema of retail.RET_PRODUCTS. List every column that exists today.
+Show the grain and joins for those models.
 ```
 
 ---
 
-## Step 2 - Compare model code against current source schema
+## Step 2 — Schema Understanding
 
-Exercises `describe` and `warehouse`. dbt Wizard pulls the live column list from Snowflake, the source-of-truth, and lays it next to what the model is asking for. This is the step that converts "something changed upstream" into "this specific column was renamed."
+Exercises `describe` and `lineage`. Check three things when the response returns:
 
-When the current schema comes back, the user reads it and spots that `brand` is gone and `brand_name` is new. Confirm with the user in one line: the rename is `brand` to `brand_name`. Do not let the user move on until they've named both columns out loud. Guessing the new column name from context is the #1 way this fix goes sideways.
+- Where **category** actually lives — product level, order-line level, or order header. Category-loyal logic in Step 5 lives or dies on this.
+- The grain of orders versus order lines — this defines the transaction-count denominator.
+- Whether **store** is on the order, on the customer, or on both — per-store segmentation requires store on the transaction, not just on the customer.
 
-Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
-
-```
-Show me every model, source definition, and test in this project that references the product column brand. I need a complete blast-radius list before I change anything.
-```
-
----
-
-## Step 3 - Blast-radius check
-
-Exercises `search` plus `lineage`. This is the step that prevents the "I fixed it but it's still broken" loop. dbt Wizard returns every file that references the old name: staging SQL, intermediate SQL, mart SQL, YAML descriptions, and any tests.
-
-When the list comes back, the user reads it and confirms the count matches the expected product blast radius: `stg_products.sql` plus 8 downstream files — 4 intermediates (`int_inventory_status`, `int_order_items_enriched`, `int_product_sales_summary`, `int_products_enriched`) and 4 marts (`dim_products`, `fct_inventory_transactions`, `fct_order_items`, `agg_product_performance`). If only 2-3 files come back, dbt Wizard missed the marts; push back.
-
-If the count is suspiciously low, tell the user to ask dbt Wizard one follow-up: *"Are you searching tests and YAML files too? Make sure source/model YAML files are included in the result."* Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+These are the joins teams quietly get wrong and then spend a week debugging. Name any blocker now, before writing the activity layer. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
 ```
-Update stg_products to read brand_name from retail.RET_PRODUCTS but keep the public column name as brand. Preserve the downstream contract so models that already select brand do not need to change.
+Check recent order dates and category values needed for a 180-day segmentation model.
 ```
 
 ---
 
-## Step 4 - Apply the fix, preserve the contract
+## Step 3 — Data Inspection
 
-Exercises the alias-preserving staging fix. The critical instruction here is **contract preservation**: change the source-side reference to `brand_name` but keep the public dbt column name `brand` so every downstream model and dashboard keeps working without further changes.
+Exercises `warehouse` and `dbt_show` on the rolling-window anchor and the distinct category values. Two silent bugs to watch for:
 
-The staging model should change from selecting `brand` to selecting `brand_name as brand`, not `brand_name`. dbt Wizard should write the edit this way by default; if it doesn't, the user pushes back with: *"Re-alias to the original name so downstream models don't have to change."*
+- A **stale `max(order_date)`** that quietly shrinks the 180-day window. If the most recent order is months old, "trailing 180 days from today" returns far less data than the user expects.
+- A **category field with nulls, whitespace, or mixed case** that breaks category-loyal logic later.
 
-When the edit returns, the user spot-checks `models/staging/stg_products.sql` and confirms the alias is in place. Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+If the max order date is more than a few days old, decide with the user whether to anchor the window on `current_date` or on `max(order_date)`. If categories are dirty, decide on exclude-versus-coalesce now. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
 ```
-Compile stg_products and every downstream product model, then preview the first 10 rows of stg_products ordered deterministically by product_id. Do not materialize anything yet.
+Create a 180-day customer activity model by store.
 ```
 
 ---
 
-## Step 5 - Compile, preview, and re-run
+## Step 4 — Activity Layer Model
 
-Exercises `dbt_compile` and `dbt_show`. The compile is the smoke test. If any file still references the missing source-side column incorrectly, the compile fails here, not in the warehouse. The preview confirms the renamed column is flowing through correctly under its original public name.
+Exercises file edits and model creation. This is the **reusable intermediate model** — not the segment model yet. Per-customer × store aggregates over the trailing 180 days:
 
-When the preview renders, confirm:
+- `transaction_count` — count of orders in the window
+- `avg_transaction_value` — mean order value
+- `max_transaction_value` — largest single order value
+- `category_transaction_count` — per-category transaction counts at customer × store × category grain
 
-- The preview returns rows (non-zero).
-- The output still has a column named `brand` (the alias survived) with sane-looking values.
-- No compile errors anywhere in the product lineage.
+Building this as its own model is the design choice that pays back for years. Churn models, RFM models, executive dashboards — all of them can sit on this layer instead of re-deriving the same aggregates in five different places. That is the difference between an analytics-engineering practice and a pile of one-off queries.
 
-Then tell the user to run the actual re-build from the terminal:
+When the SQL is generated, verify the 180-day window is applied consistently and that the grain is customer × store (with customer × store × category for the category counts). Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
 
 ```
-dbt run --select stg_products+
+Create a segment model for VIPs, big spenders, and category-loyal customers, built on top of the activity model.
 ```
 
-This is the "did we really fix it?" moment. A green run here closes the loop on the original failure from the pre-step.
+---
+
+## Step 5 — Segment Model
+
+Exercises file edits and model creation on top of the activity layer. The three canonical segment definitions for this scenario:
+
+- **VIP** — `avg_transaction_value > $100` AND `transaction_count >= 3`
+- **Big spender** — `max_transaction_value > $300` (at least one transaction over $300)
+- **Category-loyal** — `category_transaction_count >= 10` for any single category
+
+Customers can belong to multiple segments. The model should tag or union rows so a single customer can appear with multiple `segment_name` values — that is the business definition, not a bug. Expected columns: customer identifier, `store_name`, `segment_name`, `transaction_count`, `avg_transaction_value`, `max_transaction_value`, `category`, `category_transaction_count`.
+
+When the SQL is generated, verify the multi-segment logic and confirm the thresholds match the definitions above. Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
+
+```
+Compile and preview the segment model. Exclude customers with no segment.
+```
+
+---
+
+## Step 6 — Safe Preview
+
+Exercises `dbt_compile` and `dbt_show`. The SQL compiles, sample rows render, nothing lands in the warehouse yet. The "exclude no segment" filter doubles as a data-quality check: if a large share of customers fall out, the thresholds or the date window need a second look *before* Marketing ever sees the list.
+
+When the preview returns:
+
+- Confirm multi-segment customers appear on multiple rows. If they don't, the union or tagging logic is wrong.
+- Flag any segment that comes back suspiciously empty (zero VIPs, for example). That is almost always a threshold or join issue, not reality.
+- Eyeball whether the audience size is plausible for a Marketing campaign. A list of 11 customers is not a campaign; a list of 1.1 million is not targeted.
+
+Then ask dbt Wizard — copy this as written, or rephrase it in your own words:
+
+```
+Materialize the segment model into my dev schema. Skip the verification pass — the preview already confirmed the output.
+```
+
+---
+
+## Step 7 — Materialize
+
+Exercises `dbt_run` against the user's dev schema (`dev_lab_user_N`). The "skip the verification pass" instruction is deliberate: the Step 6 preview already validated the output, and re-running a full verification pass burns roughly 10% of a 20-minute lab on duplicate work. The instructor drops dev schemas after the lab via a cleanup script, so this build is safe and reversible.
+
+When the build succeeds, confirm the model landed in the user's dev schema and the row count is consistent with the Step 6 preview. The campaign audience now lives as a queryable, versioned table that Marketing — or a campaign-orchestration tool — can pull from directly.
 
 ---
 
 ## Wrap-up
 
-The user started the lab with a failed `dbt run` and a Fivetran product source that had silently changed shape overnight. They used dbt Wizard to read the error, diff the live source schema against the model code, map the full product blast radius, apply an alias-preserving fix, and re-run to green, without grepping the project by hand or breaking a single downstream model.
-
-That's the everyday analytics-engineering problem dbt Wizard exists to solve: upstream-source drift caught and fixed in minutes, not in a Slack thread that lasts the rest of the day.
-
----
-
-## Final artifact
-
-- `stg_products` now compiles, runs, and emits the renamed source column `brand_name` under its original public name `brand`. Every downstream product model in the project still resolves without further changes.
+In two or three sentences: the user took a Marketing question — *"which customers should we target?"* — and used dbt Wizard to discover six entity types, validate grain and joins, inspect the data for a fresh date anchor, build a reusable activity layer, build a segment model on top of it, safely preview the audience, and materialize the result into their own dev schema. The campaign list now sits on a reusable, testable two-model design — not a screenshot of a query somebody ran once. That is what an analytics-engineering workflow looks like.
 
 ---
 
 ## References
 
-- `references/dbt_wizard_setup.md`: install, run, config, and auth requirements for dbt Wizard.
-- `references/instructor_setup.md`: how the instructor applies the `brand` to `brand_name` source column rename in Snowflake before the lab.
+- `references/dbt_wizard_setup.md` — install, run, config, and auth requirements for dbt Wizard.
