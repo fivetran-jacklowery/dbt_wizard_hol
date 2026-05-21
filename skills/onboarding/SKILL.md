@@ -184,6 +184,7 @@ Done by hand, the everyday first-week onboarding takes most engineers a week or 
 
 ## References
 
+- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
 - `references/mart_lineage_grain_output_template.md`: output format for mart lineage, grain, key columns, and upstream staging/source mapping.
 - `references/model_inventory_output_template.md`: output format for listing staging, intermediate, and mart models by domain.
 - `references/project_summary_output_template.md`: output format for project-summary answers.

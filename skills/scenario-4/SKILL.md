@@ -147,4 +147,5 @@ That's the everyday analytics-engineering problem dbt Wizard exists to solve: up
 
 ## References
 
+- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
 - `references/instructor_setup.md`: how the instructor applies the `brand` to `brand_name` source column rename in Snowflake before the lab.

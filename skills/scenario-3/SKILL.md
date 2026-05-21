@@ -141,3 +141,9 @@ When the build succeeds, confirm the model landed in the user's dev schema and t
 ## Wrap-up
 
 In two or three sentences: the user took a Marketing question — *"which customers should we target?"* — and used dbt Wizard to discover six entity types, validate grain and joins, inspect the data for a fresh date anchor, build a reusable activity layer, build a segment model on top of it, safely preview the audience, and materialize the result into their own dev schema. The campaign list now sits on a reusable, testable two-model design — not a screenshot of a query somebody ran once. That is what an analytics-engineering workflow looks like.
+
+---
+
+## References
+
+- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.

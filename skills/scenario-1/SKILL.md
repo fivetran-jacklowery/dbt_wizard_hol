@@ -116,3 +116,9 @@ When the build succeeds, close with one line: the user took a stakeholder questi
 ## Final artifact
 
 - Model: `inventory_shipment_variance` — one row per misallocated store/item where actual inventory differs from expected, in the participant's dev schema
+
+---
+
+## References
+
+- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
