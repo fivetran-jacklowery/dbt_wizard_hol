@@ -12,7 +12,7 @@ renamed as (
         name                                                     as product_name,
         description                                              as product_description,
         subcategory_id,
-        brand,
+        brand_name                                               as brand,
         unit_price,
         weight_lbs,
         is_active,
