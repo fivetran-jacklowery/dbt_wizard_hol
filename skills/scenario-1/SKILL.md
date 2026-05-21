@@ -121,4 +121,4 @@ When the build succeeds, close with one line: the user took a stakeholder questi
 
 ## References
 
-- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
+- `lab_reference/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.

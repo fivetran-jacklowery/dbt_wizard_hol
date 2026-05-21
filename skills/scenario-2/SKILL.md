@@ -159,7 +159,7 @@ Done by hand, the everyday extend-an-existing-model task takes half a day of gre
 
 ## References
 
-- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
+- `lab_reference/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
 - `references/enriched_orders_current_state_output_template.md`: output format for locating `int_orders_enriched`, its grain, current emitted columns, and downstream consumers.
 - `references/ticket_data_discovery_output_template.md`: output format for finding ticket data that exists in the warehouse but is not connected to `int_orders_enriched`.
 - `references/ticket_order_join_validation_output_template.md`: output format for validating `stg_tickets.order_id` coverage and cardinality against `int_orders_enriched`.

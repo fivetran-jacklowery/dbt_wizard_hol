@@ -24,7 +24,7 @@ The first prompt starts the Marketing customer-segmentation story for the curren
 
 The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm building the Marketing customer segment at the activity-model step."
 
-If dbt Wizard is not yet configured, send the user to `lab_scripts/dbt_wizard_setup.md` before Step 1.
+If dbt Wizard is not yet configured, send the user to `lab_reference/dbt_wizard_setup.md` before Step 1.
 
 ---
 
@@ -148,4 +148,4 @@ In two or three sentences: the user took a Marketing question — *"which custom
 
 ## References
 
-- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
+- `lab_reference/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.

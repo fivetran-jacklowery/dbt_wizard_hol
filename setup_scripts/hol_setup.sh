@@ -163,20 +163,9 @@ info "Writing dbt profiles.yml..."
 mkdir -p ~/.dbt
 
 cat > ~/.dbt/profiles.yml << YAML
-dbt_hands_on_lab_profile:
+dbt_hands_on_lab_aws:
   outputs:
     dev:
-      account: GQ81837-SALES_ENG_TESTING_AWS
-      database: snowflake_summit_2026_hol_db
-      private_key_passphrase: ${PASSPHRASE}
-      private_key_path: ${PRIVATE_KEY_PATH}
-      role: lab_user_role
-      schema: ${SCHEMA}
-      threads: 4
-      type: snowflake
-      user: lab_user_${NUM}
-      warehouse: default
-    prod:
       account: GQ81837-SALES_ENG_TESTING_AWS
       database: snowflake_summit_2026_hol_db
       private_key_passphrase: ${PASSPHRASE}

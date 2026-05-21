@@ -35,7 +35,7 @@ The first prompt starts the product source schema-drift story for the current ch
 
 The copyable prompts are intentionally concise and should stay natural. If a brand-new independent session starts in the middle with no prior Step 1 context, have the user restart at Step 1 or provide a one-sentence resume cue such as "I'm fixing product source schema drift at the blast-radius step."
 
-If dbt Wizard is not yet configured, send the user to `lab_scripts/dbt_wizard_setup.md` before Step 1.
+If dbt Wizard is not yet configured, send the user to `lab_reference/dbt_wizard_setup.md` before Step 1.
 
 ---
 
@@ -149,5 +149,5 @@ That's the everyday analytics-engineering problem dbt Wizard exists to solve: up
 
 ## References
 
-- `lab_scripts/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
-- `lab_scripts/instructor_setup.md`: how the instructor applies the `brand` to `brand_name` source column rename in Snowflake before the lab.
+- `lab_reference/dbt_wizard_setup.md`: lab-level setup reference retained outside the skill bundle.
+- `skills/scenario-3/instructor_setup.md`: how the instructor applies the `brand` to `brand_name` source column rename in Snowflake before the lab.
