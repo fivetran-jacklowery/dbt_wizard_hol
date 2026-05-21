@@ -1,6 +1,6 @@
 ---
 name: scenario-3
-description: Use this skill when the user is investigating a broken dbt model caused by an upstream source schema change — specifically `retail.RET_PRODUCTS.brand` being renamed to `brand_name` — and wants dbt Wizard to help diagnose and fix it. Triggers on natural-language phrasing like "my dbt run is failing", "this model used to work and now doesn't", "the product source changed and broke my model", "brand column not found after a Fivetran sync", "help me figure out which product column was renamed", "fix stg_products", "brand was renamed upstream and I need to find every reference", or "dbt run errored after the products source schema changed". Use for upstream product-source schema drift specifically — not for inventory or shipment problems (scenario-1), product quality/source-extension work (scenario-2), or customer segmentation (scenario-4).
+description: Use for upstream product-source schema drift in the dbt Wizard HOL, especially `retail.RET_PRODUCTS.brand` renamed to `brand_name` breaking `stg_products` and downstream product models. Trigger on failed dbt runs, missing product columns, brand column not found, Fivetran/source schema changes, or requests to diagnose/fix `stg_products`. For failed-run summaries, use `references/schema_drift_step0_failure_output_template.md`. Not for inventory allocation, ticket/order enrichment, or customer segmentation.
 ---
 
 # dbt Wizard - Broken Product Model from a Source Column Rename
@@ -45,6 +45,8 @@ dbt run --select stg_products+
 
 They will see a compile or runtime error referencing `brand`. Capture the exact error text. Step 1 uses it.
 
+When summarizing the failed run for the user, use `references/schema_drift_step0_failure_output_template.md`. Populate it from the latest terminal output or `target/run_results.json`. Keep the format stable: attempted command, failed model, short error, compiled file line, downstream impact, and schema-drift interpretation.
+
 ---
 
 ## Step 1 - Explain the failure
@@ -71,17 +73,26 @@ Exercises `describe` and `warehouse`. dbt Wizard pulls the live column list from
 
 When the current schema comes back, the user reads it and spots that `brand` is gone and `brand_name` is new. Confirm with the user in one line: the rename is `brand` to `brand_name`. Do not let the user move on until they've named both columns out loud. Guessing the new column name from context is the #1 way this fix goes sideways.
 
-Then ask dbt Wizard - copy this as written, or rephrase it in your own words:
+Then ask dbt Wizard - copy this as written, or rephrase it in your own words. Use `references/blast_radius_prompt_template.md` for the reusable grouped-output template behind this prompt:
 
 ```
-Show me every model, source definition, and test in this project that references the product column brand. I need a complete blast-radius list before I change anything.
+Show me every model, source definition, test, and YAML file in this project that references the product column brand. I need a complete blast-radius list before changing anything.
+
+Please list the results grouped as:
+1. Broken source-side references
+2. Source definitions or YAML documentation
+3. Downstream models using the public dbt contract column
+4. Tests that directly reference the column
+5. Any other relevant files
+
+For each result, include the file path, line number if available, and why it matters. Also tell me which references need to change versus which downstream references should stay unchanged because the staging model should preserve the public column name.
 ```
 
 ---
 
 ## Step 3 - Blast-radius check
 
-Exercises `search` plus `lineage`. This is the step that prevents the "I fixed it but it's still broken" loop. dbt Wizard returns every file that references the old name: staging SQL, intermediate SQL, mart SQL, YAML descriptions, and any tests.
+Exercises `search` plus `lineage`. This is the step that prevents the "I fixed it but it's still broken" loop. dbt Wizard returns every file that references the old name, grouped by fix-required source references, YAML/docs, downstream public-contract references, direct tests, and any other relevant files. For the reusable grouped prompt, read `references/blast_radius_prompt_template.md`.
 
 When the list comes back, the user reads it and confirms the count matches the expected product blast radius: `stg_products.sql` plus 8 downstream files — 4 intermediates (`int_inventory_status`, `int_order_items_enriched`, `int_product_sales_summary`, `int_products_enriched`) and 4 marts (`dim_products`, `fct_inventory_transactions`, `fct_order_items`, `agg_product_performance`). If only 2-3 files come back, dbt Wizard missed the marts; push back.
 
