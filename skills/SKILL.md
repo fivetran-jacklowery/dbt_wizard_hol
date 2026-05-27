@@ -25,7 +25,7 @@ When this skill is triggered, run the following steps before showing Prompt 1. D
 
 Keep setup output quiet. Do not stream or summarize routine command logs, test names, dbt node output, schema listings, or successful command details to the user. Only surface details if a setup step fails, requires approval, or leaves the working tree/schema state unexpected.
 
-On success, report only a concise readiness message and immediately show Prompt 1, for example:
+On success, report only a concise readiness message and show Prompt 1 once in the same "YOUR NEXT PROMPT" callout format used throughout the lab. Do not also show Prompt 1 separately above the callout.
 
 > Lab setup is complete ✅  
 > The repo is clean, the initial dbt build passed, and your dev schemas are ready.
@@ -79,12 +79,16 @@ Wait for the build to complete. If it succeeds, confirm the target schemas are n
 
 ## How to run this skill
 
+Keep lab responses concise. Prefer a short answer that gets the attendee to the next action over long explanations. Only expand when the user asks for detail, a validation step fails, or a modeling choice has non-obvious downstream consequences.
+
 For every prompt:
 
 1. Show the user the question to ask dbt Wizard inside a plain fenced code block — no quoting or decoration — so it can be triple-clicked or read off a printed lab sheet.
 2. Frame it as *"copy this as written, or rephrase it in your own words."* Copy-as-written is recommended for the timed lab.
 3. After dbt Wizard responds, name the *insight* the user just earned in one sentence. Do not restate the output.
 4. **At the end of your response for every prompt, display the next prompt in a prominent callout.** Use a horizontal rule, then a bold `⬇ YOUR NEXT PROMPT:` heading, then the next copyable question in a fenced code block, then another horizontal rule. Make it impossible to miss.
+
+Do not duplicate the same prompt in a single response. If the current response is only setup/readiness, the callout containing Prompt 1 is sufficient.
 
 Never tell the user to "say next," "paste your output here," or "ready for the next step?" They advance by typing each question themselves.
 
