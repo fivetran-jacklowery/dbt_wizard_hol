@@ -136,7 +136,7 @@ After responding, end with:
 **⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
 
 ```
-Create a new mart model called orders_by_week that aggregates orders to the week grain with order_count, gross_revenue, and distinct_customers. Then compile and preview it — don't materialize it.
+Create a new mart model called orders_by_week that aggregates orders to the week grain with order_count, gross_revenue, and distinct_customers. Then compile and preview it.
 ```
 ---
 
