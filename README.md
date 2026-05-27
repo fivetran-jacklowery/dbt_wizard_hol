@@ -50,13 +50,9 @@ For Wizard-driven lab work, prefer asking Wizard to inspect models, preview data
 
 ## Guided scenario skills
 
-Repo-local Wizard skills live in `skills/`. They encode the booth/lab flows so the demo stays consistent across attendees:
+Repo-local Wizard skills live in `skills/`. This branch intentionally ships a single consolidated skill so every attendee gets the same lab flow:
 
-- `onboarding` — first-week repo tour and a small `orders_by_week` mart contribution
-- `scenario-1` — inventory shipment variance across store/warehouse locations
-- `scenario-2` — add support-ticket context to enriched orders safely
-- `scenario-3` — fix product source schema drift while preserving downstream contracts
-- `scenario-4` — build a Marketing customer segmentation asset
+- `lab` — full 15-minute guided hands-on lab with quiet setup and all five attendee prompts
 
 Install or refresh the repo-local skills with:
 
