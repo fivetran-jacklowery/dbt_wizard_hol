@@ -150,7 +150,7 @@ After responding, end with:
 **⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
 
 ```
-Compile int_orders_enriched and every downstream model that depends on it. Then preview 20 rows of int_orders_enriched ordered by order_id — don't materialize anything.
+Compile int_orders_enriched and every downstream model that depends on it. Then preview 20 rows of int_orders_enriched ordered by order_id.
 ```
 ---
 
