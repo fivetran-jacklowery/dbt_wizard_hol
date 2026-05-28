@@ -17,63 +17,13 @@ This lab runs in two sections. The first three prompts orient you to the project
 
 ---
 
-## Lab Setup — run this before Prompt 1
+## Lab prerequisite
 
-When this skill is triggered, run the following steps before showing Prompt 1. Do not skip them. Do not advance to Prompt 1 if any step fails.
+This skill is the workshop flow only. It assumes `$lab_init` has already prepared the repo, reset Snowflake dev schemas, and built the baseline project.
 
-### Setup output style
+When `$lab` is triggered from a freshly initialized repo, do not run setup or cleanup. Start by showing Prompt 1 once in the standard next-prompt callout.
 
-Keep setup output quiet. Do not stream or summarize routine command logs, test names, dbt node output, schema listings, or successful command details to the user. Only surface details if a setup step fails, requires approval, or leaves the working tree/schema state unexpected.
-
-On success, report only a concise readiness message and show Prompt 1 once in the same "YOUR NEXT PROMPT" callout format used throughout the lab. Do not also show Prompt 1 separately above the callout.
-
-> Lab setup is complete ✅  
-> The repo is clean, the initial dbt build passed, and your dev schemas are ready.
-
-### 1. Clear local changes and dbt artifacts
-
-```bash
-git restore .
-git clean -fd
-rm -rf target
-```
-
-Confirm the working tree is clean:
-
-```bash
-git status
-```
-
-Expected: `nothing to commit, working tree clean`. If there are unexpected uncommitted files, stop and surface them to the user before continuing.
-
-### 2. Verify the target schemas are empty
-
-Identify the current target schema prefix. Run `dbt debug` if it is not already known:
-
-```bash
-uvx --from dbt-snowflake dbt debug
-```
-
-Look for the active `schema` in the output. Then check whether any of the four dbt-managed schemas already exist in Snowflake and drop them if they do. Replace `<target>` with the active schema prefix:
-
-```sql
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_staging cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_intermediate cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_marts cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_marketing cascade;
-```
-
-**Never drop `SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL`.** That is the shared raw source schema and must not be touched.
-
-### 3. Run dbt build
-
-```bash
-uvx --from dbt-snowflake dbt build
-```
-
-Wait for the build to complete. If it succeeds, confirm the target schemas are now populated and proceed to Prompt 1. If it fails, surface the error — do not continue the lab until the build is clean.
-
----
+If the repo appears dirty, the baseline build is missing, or the user asks to reset/prepare/clean up, stop and direct them to run `$lab_init` first.
 
 ---
 
@@ -236,26 +186,9 @@ Materialize int_orders_enriched into my dev schema. Skip the extended verificati
 
 ---
 
-## Lab Teardown — run this after the lab is complete
+## Lab cleanup
 
-After Prompt 5 (and after the optional materialize step if the attendee ran it), drop the target schemas to leave a clean slate for the next attendee. Replace `<target>` with the lab user's schema prefix:
-
-```sql
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_staging cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_intermediate cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_marts cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target>_marketing cascade;
-```
-
-**Never drop `SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL`.**
-
-Then reset the git working tree and dbt artifacts for the next attendee:
-
-```bash
-git restore .
-git clean -fd
-rm -rf target
-```
+After Prompt 5, or after the optional materialization step, use `$lab_init` to reset the repo and Snowflake dev schemas for the next attendee.
 
 ---
 
