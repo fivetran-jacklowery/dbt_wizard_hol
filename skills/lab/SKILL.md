@@ -36,11 +36,11 @@ For every prompt:
 1. Show the user the question to ask dbt Wizard inside a plain fenced code block — no quoting or decoration — so it can be triple-clicked or read off a printed lab sheet.
 2. Frame it as *"copy this as written, or rephrase it in your own words."* Copy-as-written is recommended for the timed lab.
 3. After dbt Wizard responds, name the *insight* the user just earned in one sentence. Do not restate the output.
-4. **The next-prompt callout must be the absolute last visible thing in the assistant response.** Use a horizontal rule, then a bold `⬇ YOUR NEXT PROMPT:` heading, then the next copyable question in a fenced code block, then another horizontal rule. Nothing may appear after it.
+4. **The next-prompt callout must appear in every successful lab-step response that has a next step.** Use a horizontal rule, then a bright green `⬇ YOUR NEXT PROMPT:` heading, then the next copyable question in a fenced code block, then another horizontal rule. Render the heading as `<span style="color:#00C853; font-weight:800;">⬇ YOUR NEXT PROMPT:</span>` so it is easy to catch visually. Make it the last assistant-authored block whenever possible.
 
 Do not duplicate the same prompt in a single response. If the current response is only setup/readiness, the callout containing Prompt 1 is sufficient.
 
-Wizard may emit automatic changes / impact / validation cards after responses that edit files. If that automatic card would appear after the next-prompt callout, do **not** include the next-prompt callout in that same response. Instead, finish the edit response without a prompt callout; when the attendee asks to continue or says "move on", respond with only the next-prompt callout so it is last.
+Wizard may emit automatic changes / impact / validation cards after responses that edit files. **Still include the next-prompt callout in the same response.** The workshop priority is that attendees always have the next copy/paste prompt in view. If an automatic card renders below the callout, that is acceptable; do not defer the next prompt to a later turn.
 
 Never tell the user to "say next," "paste your output here," or "ready for the next step?" They advance by typing each question themselves.
 
@@ -65,7 +65,7 @@ For the project summary portion, use `references/project_summary_output_template
 After responding, end with:
 
 ---
-**⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
+<span style="color:#00C853; font-weight:800;">⬇ YOUR NEXT PROMPT:</span> — copy this as written, or type something similar in your own words:
 
 ```
 Show me a 10-row sample from fct_orders and the distinct values in the order_status column. Show both as readable tables. For the sample, use a representative subset of key columns.
@@ -87,7 +87,7 @@ For the 10-row sample, show a readable representative subset: identifiers, dates
 After responding, end with:
 
 ---
-**⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
+<span style="color:#00C853; font-weight:800;">⬇ YOUR NEXT PROMPT:</span> — copy this as written, or type something similar in your own words:
 
 ```
 Create a new mart model called orders_by_week that aggregates orders to the week grain with order_count, gross_revenue, and distinct_customers. Then compile and preview it.
@@ -115,13 +115,13 @@ After writing the file, compile and preview. Do **not** run `dbt run`. Confirm:
 
 The deliverable is a compiled, previewed `.sql` file in the repo — not a built table.
 
-This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Only include the next-prompt callout if it will be the absolute last visible block. If the automatic card will follow, omit the callout and provide this next prompt when the attendee asks to continue:
+This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Still include this next-prompt callout in the same response so attendees are never left without the next copy/paste step:
 
 ---
-**⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
+<span style="color:#00C853; font-weight:800;">⬇ YOUR NEXT PROMPT:</span> — copy this as written, or type something similar in your own words:
 
 ```
-Add order-level support ticket context to int_orders_enriched: ticket_count, has_open_ticket_flag, and last_ticket_status.
+Do we have support ticket info, and is it tied to orders? If not, can we add order-level support ticket context to int_orders_enriched: ticket_count, has_open_ticket_flag, and last_ticket_status.
 ```
 ---
 
@@ -148,10 +148,10 @@ The edit adds three CTEs before the `enriched` CTE: `ticket_rollup` (count + ope
 
 For consistent current-state context, use `references/enriched_orders_current_state_output_template.md` when summarizing what the model currently produces.
 
-This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Only include the next-prompt callout if it will be the absolute last visible block. If the automatic card will follow, omit the callout and provide this next prompt when the attendee asks to continue:
+This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Still include this next-prompt callout in the same response so attendees are never left without the next copy/paste step:
 
 ---
-**⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
+<span style="color:#00C853; font-weight:800;">⬇ YOUR NEXT PROMPT:</span> — copy this as written, or type something similar in your own words:
 
 ```
 Compile int_orders_enriched and every downstream model that depends on it. Then preview 20 rows of int_orders_enriched ordered by order_id.
@@ -173,7 +173,7 @@ Confirm all four of these before reporting success:
 
 If anything fails, diagnose with dbt Wizard before suggesting materialization.
 
-After responding (assuming all checks pass), include the optional prompt only if it will be the absolute last visible block. If Wizard will render a changes/impact card after the response, omit the optional prompt and provide it when the attendee asks to continue:
+After responding (assuming all checks pass), include the optional prompt in the same response so attendees have a clear final action, even if Wizard renders an automatic card below it:
 
 ---
 **⬇ LAB COMPLETE — optional bonus if you have time:**
