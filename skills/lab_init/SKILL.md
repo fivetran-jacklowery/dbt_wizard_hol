@@ -74,7 +74,7 @@ git status --short
 
 Expected: no output.
 
-### 3. Verify local skill layout
+### 3. Sync local Wizard skills
 
 The repo should expose exactly two local lab skills:
 
@@ -91,13 +91,68 @@ find skills -mindepth 2 -maxdepth 2 -name SKILL.md | sort
 
 If the result differs, stop and surface the mismatch. There should be no root-level `skills/SKILL.md`.
 
-Also inspect the Wizard user skills directory, if present:
+Then make the Wizard user skills directory match this repo. Remove stale non-system skill entries, preserve `.system`, and install/update only `lab` and `lab_init`:
 
 ```bash
-find "${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills" -mindepth 1 -maxdepth 2 -name SKILL.md | sort
+python3 - <<'PY'
+from pathlib import Path
+import filecmp
+import os
+import shutil
+
+repo_skills = Path('skills').resolve()
+wizard_home = Path(os.environ.get('DBT_WIZARD_HOME', str(Path.home() / '.dbt' / 'wizard')))
+wizard_skills = wizard_home / 'skills'
+expected = {p.name for p in repo_skills.iterdir() if p.is_dir() and (p / 'SKILL.md').exists()}
+
+if expected != {'lab', 'lab_init'}:
+    raise SystemExit(f'Expected repo skills lab and lab_init, found: {sorted(expected)}')
+
+wizard_skills.mkdir(parents=True, exist_ok=True)
+
+def remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+def dirs_match(left: Path, right: Path) -> bool:
+    cmp = filecmp.dircmp(left, right, ignore=['.DS_Store', '__pycache__'])
+    if cmp.left_only or cmp.right_only or cmp.diff_files or cmp.funny_files:
+        return False
+    return all(dirs_match(Path(cmp.left) / name, Path(cmp.right) / name) for name in cmp.common_dirs)
+
+for entry in wizard_skills.iterdir():
+    if entry.name in {'.system', '.DS_Store', '__pycache__'}:
+        continue
+    if entry.name not in expected:
+        remove_path(entry)
+
+for name in sorted(expected):
+    src = repo_skills / name
+    dest = wizard_skills / name
+    if dest.exists() and dest.is_dir() and dirs_match(src, dest):
+        continue
+    if dest.exists() or dest.is_symlink():
+        remove_path(dest)
+    shutil.copytree(src, dest, ignore=shutil.ignore_patterns('.DS_Store', '__pycache__', '*.pyc'))
+
+print('Wizard skills synced:', ', '.join(sorted(expected)))
+PY
 ```
 
-Ignore system skills under `.system`. Any non-system local skill should correspond to this repo's two lab skills (`lab` and `lab_init`). Do not delete user skills automatically; report mismatches so the instructor can decide whether to remove or reinstall them.
+Verify the installed non-system skills:
+
+```bash
+find "${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills" -mindepth 1 -maxdepth 2 -name SKILL.md | grep -v '/.system/' | sort
+```
+
+Expected:
+
+```text
+~/.dbt/wizard/skills/lab/SKILL.md
+~/.dbt/wizard/skills/lab_init/SKILL.md
+```
 
 ### 4. Identify active dbt target schema
 

@@ -7,12 +7,14 @@ Workflow:
 2. prompt for a remote branch, defaulting to main when available
 3. git checkout <branch>
 4. git pull --ff-only origin <branch>
-5. copy each skill from ./skills into ~/.dbt/wizard/skills, overwriting matches
+5. prune stale non-system skills from ~/.dbt/wizard/skills
+6. install repo skills from ./skills only when missing or changed
 """
 
 from __future__ import annotations
 
 import argparse
+import filecmp
 import shutil
 import subprocess
 import sys
@@ -22,6 +24,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILLS_SOURCE_DIR = REPO_ROOT / "skills"
 SKILLS_DEST_DIR = Path.home() / ".dbt" / "wizard" / "skills"
+IGNORED_SKILL_ENTRIES = {".DS_Store", "__pycache__", ".system"}
 
 
 class ScriptError(RuntimeError):
@@ -137,38 +140,86 @@ def checkout_and_pull(branch: str) -> None:
     run_git(["pull", "--ff-only", "origin", branch])
 
 
-def copy_skill(source: Path, destination: Path) -> None:
-    if destination.exists() or destination.is_symlink():
-        if destination.is_dir() and not destination.is_symlink():
-            shutil.rmtree(destination)
-        else:
-            destination.unlink()
-
-    if source.is_dir():
-        shutil.copytree(
-            source,
-            destination,
-            ignore=shutil.ignore_patterns(".DS_Store", "__pycache__", "*.pyc"),
-        )
-    else:
-        shutil.copy2(source, destination)
-
-
-def install_skills() -> list[Path]:
+def discover_repo_skills() -> list[Path]:
     if not SKILLS_SOURCE_DIR.exists():
         raise ScriptError(f"Skills source directory does not exist: {SKILLS_SOURCE_DIR}")
 
+    skills = [
+        path
+        for path in sorted(SKILLS_SOURCE_DIR.iterdir(), key=lambda p: p.name)
+        if path.is_dir() and (path / "SKILL.md").exists()
+    ]
+    if not skills:
+        raise ScriptError(f"No skill folders with SKILL.md found in: {SKILLS_SOURCE_DIR}")
+
+    return skills
+
+
+def remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+
+def directories_match(left: Path, right: Path) -> bool:
+    comparison = filecmp.dircmp(left, right, ignore=[".DS_Store", "__pycache__"])
+    if comparison.left_only or comparison.right_only or comparison.diff_files or comparison.funny_files:
+        return False
+    return all(
+        directories_match(Path(comparison.left) / name, Path(comparison.right) / name)
+        for name in comparison.common_dirs
+    )
+
+
+def copy_skill(source: Path, destination: Path) -> bool:
+    if destination.exists() and destination.is_dir() and not destination.is_symlink():
+        if directories_match(source, destination):
+            return False
+
+    if destination.exists() or destination.is_symlink():
+        remove_path(destination)
+
+    shutil.copytree(
+        source,
+        destination,
+        ignore=shutil.ignore_patterns(".DS_Store", "__pycache__", "*.pyc"),
+    )
+    return True
+
+
+def prune_stale_skills(expected_skill_names: set[str]) -> list[Path]:
+    removed: list[Path] = []
+    if not SKILLS_DEST_DIR.exists():
+        return removed
+
+    for entry in sorted(SKILLS_DEST_DIR.iterdir(), key=lambda p: p.name):
+        if entry.name in IGNORED_SKILL_ENTRIES:
+            continue
+        if entry.name not in expected_skill_names:
+            remove_path(entry)
+            removed.append(entry)
+
+    return removed
+
+
+def install_skills() -> tuple[list[Path], list[Path], list[Path]]:
+    repo_skills = discover_repo_skills()
+    expected_skill_names = {path.name for path in repo_skills}
+
     SKILLS_DEST_DIR.mkdir(parents=True, exist_ok=True)
+    removed = prune_stale_skills(expected_skill_names)
 
     installed: list[Path] = []
-    for source in sorted(SKILLS_SOURCE_DIR.iterdir(), key=lambda p: p.name):
-        if source.name in {".DS_Store", "__pycache__"}:
-            continue
+    unchanged: list[Path] = []
+    for source in repo_skills:
         destination = SKILLS_DEST_DIR / source.name
-        copy_skill(source, destination)
-        installed.append(destination)
+        if copy_skill(source, destination):
+            installed.append(destination)
+        else:
+            unchanged.append(destination)
 
-    return installed
+    return installed, unchanged, removed
 
 
 def parse_args() -> argparse.Namespace:
@@ -196,7 +247,7 @@ def main() -> int:
         fetch_remote()
         branch = prompt_for_branch(list_remote_branches())
         checkout_and_pull(branch)
-        installed = install_skills()
+        installed, unchanged, removed = install_skills()
     except ScriptError as exc:
         print(f"\nERROR: {exc}", file=sys.stderr)
         return 1
@@ -204,8 +255,16 @@ def main() -> int:
         print("\nCancelled.", file=sys.stderr)
         return 130
 
-    print(f"\nInstalled {len(installed)} skill(s) into {SKILLS_DEST_DIR}:")
+    print(f"\nPruned {len(removed)} stale skill entr{'y' if len(removed) == 1 else 'ies'} from {SKILLS_DEST_DIR}:")
+    for path in removed:
+        print(f"  - {path.name}")
+
+    print(f"\nInstalled or updated {len(installed)} skill(s) into {SKILLS_DEST_DIR}:")
     for path in installed:
+        print(f"  - {path.name}")
+
+    print(f"\nAlready up to date: {len(unchanged)} skill(s):")
+    for path in unchanged:
         print(f"  - {path.name}")
     return 0
 
