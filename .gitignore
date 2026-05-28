@@ -9,3 +9,5 @@ profiles.yml
 
 .cortex/
 dbt_internal_packages/
+
+.dbt/
