@@ -36,9 +36,11 @@ For every prompt:
 1. Show the user the question to ask dbt Wizard inside a plain fenced code block — no quoting or decoration — so it can be triple-clicked or read off a printed lab sheet.
 2. Frame it as *"copy this as written, or rephrase it in your own words."* Copy-as-written is recommended for the timed lab.
 3. After dbt Wizard responds, name the *insight* the user just earned in one sentence. Do not restate the output.
-4. **At the end of your response for every prompt, display the next prompt in a prominent callout.** Use a horizontal rule, then a bold `⬇ YOUR NEXT PROMPT:` heading, then the next copyable question in a fenced code block, then another horizontal rule. Make it impossible to miss.
+4. **The next-prompt callout must be the absolute last visible thing in the assistant response.** Use a horizontal rule, then a bold `⬇ YOUR NEXT PROMPT:` heading, then the next copyable question in a fenced code block, then another horizontal rule. Nothing may appear after it.
 
 Do not duplicate the same prompt in a single response. If the current response is only setup/readiness, the callout containing Prompt 1 is sufficient.
+
+Wizard may emit automatic changes / impact / validation cards after responses that edit files. If that automatic card would appear after the next-prompt callout, do **not** include the next-prompt callout in that same response. Instead, finish the edit response without a prompt callout; when the attendee asks to continue or says "move on", respond with only the next-prompt callout so it is last.
 
 Never tell the user to "say next," "paste your output here," or "ready for the next step?" They advance by typing each question themselves.
 
@@ -78,7 +80,9 @@ Exercises `warehouse` for a live 10-row sample of `fct_orders` and a `SELECT DIS
 
 This step makes the project real — up to now it was schemas and DAG diagrams, now it's rows. The `order_status` distinct-values check is the load-bearing part: without it, attendees will write filters based on guesses (`where order_status = 'shipped'`, `where order_status = 'complete'`). The real values in this project might be `delivered`, `in_progress`, `cancelled`, `returned`. Reading them directly prevents silent wrong-result bugs.
 
-For the 10-row sample, show a readable representative subset: identifiers, dates, status field, primary financial measures, 1–2 useful flags. Render the distinct-values summary as a separate readable table. Do not mention `submit_table`; this lab environment may not expose that renderer.
+Before running the warehouse checks, tell the attendee: "You may see Wizard's warehouse check next — that is not the final sample table. I'll summarize it cleanly below." Keep this as a short reassurance, not a long explanation.
+
+For the 10-row sample, show a readable representative subset: identifiers, dates, status field, primary financial measures, 1–2 useful flags. Render the distinct-values summary as a separate readable table. Do not mention `submit_table`; this lab environment may not expose that renderer. Do not paste raw warehouse tool output as the final answer unless diagnosing a failure.
 
 After responding, end with:
 
@@ -111,7 +115,7 @@ After writing the file, compile and preview. Do **not** run `dbt run`. Confirm:
 
 The deliverable is a compiled, previewed `.sql` file in the repo — not a built table.
 
-After responding, end with:
+This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Only include the next-prompt callout if it will be the absolute last visible block. If the automatic card will follow, omit the callout and provide this next prompt when the attendee asks to continue:
 
 ---
 **⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
@@ -144,7 +148,7 @@ The edit adds three CTEs before the `enriched` CTE: `ticket_rollup` (count + ope
 
 For consistent current-state context, use `references/enriched_orders_current_state_output_template.md` when summarizing what the model currently produces.
 
-After responding, end with:
+This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Only include the next-prompt callout if it will be the absolute last visible block. If the automatic card will follow, omit the callout and provide this next prompt when the attendee asks to continue:
 
 ---
 **⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
@@ -169,7 +173,7 @@ Confirm all four of these before reporting success:
 
 If anything fails, diagnose with dbt Wizard before suggesting materialization.
 
-After responding (assuming all checks pass), end with:
+After responding (assuming all checks pass), include the optional prompt only if it will be the absolute last visible block. If Wizard will render a changes/impact card after the response, omit the optional prompt and provide it when the attendee asks to continue:
 
 ---
 **⬇ LAB COMPLETE — optional bonus if you have time:**
