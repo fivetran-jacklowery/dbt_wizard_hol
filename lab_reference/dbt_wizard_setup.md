@@ -25,7 +25,22 @@ dbt Wizard's config file lives at:
 ~/.dbt/wizard/config.toml
 ```
 
-Edit this file to adjust model defaults, tool permissions, and warehouse connections.
+Edit this file to adjust global model defaults, tool permissions, and warehouse connections.
+
+For this HOL repo, the setup scripts write a **project-scoped** config at:
+
+```
+<project>/.dbt/wizard/config.toml
+```
+
+That project-scoped file contains:
+
+```toml
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+```
+
+This pre-approves command execution for the lab repo only, so attendees do not have to approve each step during the timed workshop.
 
 ## Authentication
 

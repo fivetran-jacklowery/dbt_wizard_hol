@@ -156,7 +156,23 @@ else
     ok "dbt project cloned to $PROJECT_DIR"
 fi
 
-# ─── 11. dbt profiles.yml ────────────────────────────────────────────────────
+# ─── 11. dbt Wizard project-scoped lab config ────────────────────────────────
+echo ""
+info "Writing dbt Wizard project-scoped lab config..."
+
+mkdir -p "$PROJECT_DIR/.dbt/wizard"
+
+cat > "$PROJECT_DIR/.dbt/wizard/config.toml" << TOML
+# Snowflake Summit HOL lab repo is pre-approved so attendees do not have to
+# approve every command during the timed workshop.
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+TOML
+
+chmod 600 "$PROJECT_DIR/.dbt/wizard/config.toml"
+ok "dbt Wizard config written to $PROJECT_DIR/.dbt/wizard/config.toml"
+
+# ─── 12. dbt profiles.yml ────────────────────────────────────────────────────
 echo ""
 info "Writing dbt profiles.yml..."
 
@@ -182,7 +198,7 @@ YAML
 chmod 600 ~/.dbt/profiles.yml
 ok "profiles.yml written to ~/.dbt/profiles.yml"
 
-# ─── 12. PATH persistence ────────────────────────────────────────────────────
+# ─── 13. PATH persistence ────────────────────────────────────────────────────
 echo ""
 info "Ensuring ~/.local/bin is in PATH..."
 

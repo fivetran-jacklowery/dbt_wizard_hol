@@ -1,0 +1,4 @@
+# Snowflake Summit HOL lab repo is pre-approved so attendees do not have to
+# approve every command during the timed workshop.
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
