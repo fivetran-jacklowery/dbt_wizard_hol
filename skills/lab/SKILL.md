@@ -117,7 +117,7 @@ After responding, end with:
 **⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
 
 ```
-We have a support tickets table in the warehouse that nobody has connected to orders yet. I want to add ticket context to int_orders_enriched — how many tickets each order generated, whether any are still open, and the status of the most recent one. Update the model. Aggregate stg_tickets to one row per order_id before joining so the grain stays one row per order, use a LEFT JOIN so orders without tickets still appear, and preserve every column int_orders_enriched currently emits.
+Add order-level support ticket context to int_orders_enriched: ticket_count, has_open_ticket_flag, and last_ticket_status.
 ```
 ---
 
@@ -126,6 +126,8 @@ We have a support tickets table in the warehouse that nobody has connected to or
 ## Prompt 4 — Modify int_orders_enriched
 
 Exercises `search`, `describe`, and `lineage` to locate the target and understand the downstream blast radius, then a file edit on the existing model.
+
+The attendee-facing prompt is intentionally short. Treat it as shorthand for the full implementation request below; do not ask the attendee to provide the extra details.
 
 **Fixed setup:**
 - Target model: `int_orders_enriched`
