@@ -71,7 +71,7 @@ Rules:
   - ticket rows joining to `int_orders_enriched`
   - distinct matched order IDs
 - If `stg_tickets.order_id` is empty, say that plainly. Do not imply order-level enrichment will produce matched ticket metrics with current data.
-- Use `submit_table` for the ticket asset inventory and the order-linkage check.
+- Render the ticket asset inventory and order-linkage check as readable markdown tables. Do not mention `submit_table`; this lab environment may not expose that renderer.
 
 For this HOL project, the populated output should usually resemble:
 

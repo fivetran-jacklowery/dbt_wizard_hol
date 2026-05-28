@@ -38,7 +38,7 @@ Cardinality: **[cardinality_classification]**.
 
 Rules:
 
-- Use `submit_table` for the metrics.
+- Render the metrics as a readable markdown table. Do not mention `submit_table`; this lab environment may not expose that renderer.
 - Always filter the primary ticket counts to `where order_id is not null`.
 - Count both ticket rows and distinct ticket `order_id` values.
 - Count both matching ticket rows and distinct matched order IDs.

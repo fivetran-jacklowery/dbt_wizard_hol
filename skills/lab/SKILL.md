@@ -66,7 +66,7 @@ After responding, end with:
 **⬇ YOUR NEXT PROMPT** — copy this as written, or type something similar in your own words:
 
 ```
-Show me a 10-row sample from fct_orders and the distinct values in the order_status column. Use submit_table for both outputs. For the sample, show a representative subset of key columns so the table is readable.
+Show me a 10-row sample from fct_orders and the distinct values in the order_status column. Show both as readable tables. For the sample, use a representative subset of key columns.
 ```
 ---
 
@@ -78,7 +78,7 @@ Exercises `warehouse` for a live 10-row sample of `fct_orders` and a `SELECT DIS
 
 This step makes the project real — up to now it was schemas and DAG diagrams, now it's rows. The `order_status` distinct-values check is the load-bearing part: without it, attendees will write filters based on guesses (`where order_status = 'shipped'`, `where order_status = 'complete'`). The real values in this project might be `delivered`, `in_progress`, `cancelled`, `returned`. Reading them directly prevents silent wrong-result bugs.
 
-For the 10-row sample, show a readable representative subset: identifiers, dates, status field, primary financial measures, 1–2 useful flags. Render the distinct-values summary in a separate `submit_table`.
+For the 10-row sample, show a readable representative subset: identifiers, dates, status field, primary financial measures, 1–2 useful flags. Render the distinct-values summary as a separate readable table. Do not mention `submit_table`; this lab environment may not expose that renderer.
 
 After responding, end with:
 
