@@ -1,0 +1,201 @@
+title: "Business Overview"
+description: "Executive overview of the dbt Wizard store: revenue, orders, customers, products, regions, and support."
+
+# Queries hit Snowflake via the lab's dbt profile (configured as `warehouse`
+# in dataface.yml). Use dbt ref() so tables resolve to each user's own marts
+# schema (e.g. dave_fowler_marts) — bare table names do NOT resolve.
+source: warehouse
+
+queries:
+  kpis:
+    description: Headline totals across all non-cancelled orders.
+    sql: |
+      select
+        sum(order_revenue_after_discount) as total_revenue,
+        count(*)                          as total_orders,
+        avg(total_amount)                 as avg_order_value,
+        count(distinct customer_id)       as buying_customers
+      from {{ ref('fct_orders') }}
+      where is_cancelled = false
+
+  monthly_revenue:
+    description: Net monthly revenue trend, summed from non-cancelled orders.
+    sql: |
+      select
+        order_month,
+        sum(order_revenue_after_discount) as net_revenue
+      from {{ ref('fct_orders') }}
+      where is_cancelled = false
+      group by 1
+      order by 1
+
+  revenue_by_category:
+    description: Net line-item revenue split by product category, from fct_order_items.
+    sql: |
+      select
+        category_name,
+        sum(line_revenue_after_discount) as revenue
+      from {{ ref('fct_order_items') }}
+      group by 1
+      order by revenue desc
+
+  top_products:
+    description: The ten highest net-revenue products, from fct_order_items.
+    sql: |
+      select
+        product_name,
+        sum(line_revenue_after_discount) as revenue
+      from {{ ref('fct_order_items') }}
+      group by 1
+      order by revenue desc
+      limit 10
+
+  revenue_by_region:
+    description: Buying customers and lifetime revenue by geographic region, from dim_customers.
+    sql: |
+      select
+        region,
+        sum(lifetime_revenue) as revenue
+      from {{ ref('dim_customers') }}
+      where has_ever_ordered
+      group by 1
+      order by revenue desc
+
+  customer_tiers:
+    description: Customers and lifetime revenue by tier (bronze/silver/gold/platinum), buyers only.
+    sql: |
+      select
+        customer_tier,
+        count(*)              as customers,
+        sum(lifetime_revenue) as lifetime_revenue
+      from {{ ref('dim_customers') }}
+      where has_ever_ordered
+      group by 1
+      order by
+        case customer_tier
+          when 'platinum' then 1
+          when 'gold'     then 2
+          when 'silver'   then 3
+          when 'bronze'   then 4
+        end
+
+  tickets_by_priority:
+    description: Open and historical support ticket volume by priority, from fct_tickets.
+    sql: |
+      select
+        priority,
+        count(*) as tickets
+      from {{ ref('fct_tickets') }}
+      group by 1
+      order by
+        case priority
+          when 'critical' then 1
+          when 'high'     then 2
+          when 'medium'   then 3
+          when 'low'      then 4
+        end
+
+charts:
+  kpi_revenue:
+    type: kpi
+    query: kpis
+    description: Total net revenue across all non-cancelled orders.
+    label: Total Revenue
+    value: total_revenue
+    format: "$,.0f"
+
+  kpi_orders:
+    type: kpi
+    query: kpis
+    description: Total non-cancelled orders placed.
+    label: Orders
+    value: total_orders
+    format: ",.0f"
+
+  kpi_aov:
+    type: kpi
+    query: kpis
+    description: Average order value (total billed amount per order).
+    label: Avg Order Value
+    value: avg_order_value
+    format: "$,.2f"
+
+  kpi_customers:
+    type: kpi
+    query: kpis
+    description: Distinct customers who have placed at least one order.
+    label: Buying Customers
+    value: buying_customers
+    format: ",.0f"
+
+  revenue_trend:
+    type: line
+    query: monthly_revenue
+    title: Monthly Net Revenue
+    description: How net revenue has trended month over month.
+    x: order_month
+    y: net_revenue
+    format: "$,.0f"
+    y_label: Net Revenue (USD)
+
+  category_mix:
+    type: donut
+    query: revenue_by_category
+    title: Revenue by Category
+    description: Share of net line-item revenue contributed by each category.
+    theta: revenue
+    color: category_name
+    total:
+      label: Total
+      format: "$,.0f"
+
+  top_products_bar:
+    type: bar
+    query: top_products
+    title: Top 10 Products by Revenue
+    description: The highest net-revenue products across the catalog.
+    x: revenue
+    y: product_name
+    format: "$,.0f"
+    sort: { by: revenue, order: desc }
+
+  revenue_by_region_bar:
+    type: bar
+    query: revenue_by_region
+    title: Lifetime Revenue by Region
+    description: Where buying customers' lifetime revenue is concentrated.
+    x: region
+    y: revenue
+    format: "$,.0f"
+    sort: { by: revenue, order: desc }
+
+  customer_tier_bar:
+    type: bar
+    query: customer_tiers
+    title: Customers by Tier
+    description: How many buying customers fall into each lifetime-revenue tier.
+    x: customer_tier
+    y: customers
+
+  tickets_priority_bar:
+    type: bar
+    query: tickets_by_priority
+    title: Support Tickets by Priority
+    description: Support ticket volume broken out by priority level.
+    x: priority
+    y: tickets
+
+rows:
+  - cols:
+      - kpi_revenue
+      - kpi_orders
+      - kpi_aov
+      - kpi_customers
+  - cols:
+      - revenue_trend
+      - category_mix
+  - top_products_bar
+  - cols:
+      - revenue_by_region_bar
+      - customer_tier_bar
+      - tickets_priority_bar
