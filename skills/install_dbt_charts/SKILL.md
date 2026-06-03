@@ -69,14 +69,27 @@ pip install "dataface[snowflake]"
 > `pip install dataface` is enough only if `dft` runs inside an environment that
 > already has a Snowflake dbt adapter.
 
-Verify:
+### 2b — Put `dft` on PATH (so it works in every terminal)
+
+The venv keeps `dft` isolated, but attendees shouldn't have to activate it. Symlink
+the binary into `~/.local/bin`, which `hol_setup.sh` already guarantees is on PATH:
+
+```bash
+mkdir -p ~/.local/bin
+ln -sf ~/snowsummit2026/dft_venv/bin/dft ~/.local/bin/dft
+```
+
+Now `dft` resolves in any new terminal — no venv activation needed.
+
+Verify (open a fresh shell, or just run):
 
 ```bash
 dft --version
 ```
 
-If `dft` is not found, the venv isn't active — re-run the `source ...activate`
-line above (and note that any new terminal must activate the venv to get `dft`).
+If `dft` is still not found, confirm `~/.local/bin` is on PATH
+(`echo $PATH | tr ':' '\n' | grep local/bin`); `hol_setup.sh` adds it to
+`~/.zshrc`, so a new terminal will pick it up.
 
 ---
 
@@ -158,8 +171,11 @@ On success, report:
 
 ## Troubleshooting
 
-- **`dft: command not found`** — the 3.13 venv isn't active. `source
-  ~/snowsummit2026/dft_venv/bin/activate`. Every new terminal needs this.
+- **`dft: command not found`** — the PATH symlink from Step 2b is missing or
+  `~/.local/bin` isn't on PATH. Re-run
+  `ln -sf ~/snowsummit2026/dft_venv/bin/dft ~/.local/bin/dft` and open a new
+  terminal. (Falling back, `source ~/snowsummit2026/dft_venv/bin/activate` also
+  works.)
 - **`dft init` prompts despite flags** — you're on an older dataface; upgrade with
   `pip install -U "dataface[snowflake]"` and re-run, or add `--yes` (note `--yes`
   defaults the editor extension to install, so keep `--no-vscode --no-cursor`).

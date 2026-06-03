@@ -3,7 +3,7 @@ name: lab_init
 description: >
   Reset and prepare the dbt Wizard hands-on lab repo before or after a lab run.
   Use when the user asks to initialize, reset, clean up, prepare the HOL repo,
-  clear Snowflake/dev schemas, restore hol_branch, remove local changes, clear
+  clear Snowflake/dev schemas, restore hol_dft_branch, remove local changes, clear
   dbt artifacts, or verify the local lab skills setup.
 ---
 
@@ -37,23 +37,23 @@ git branch --show-current
 
 If this is not the dbt Wizard HOL repo, stop and tell the user.
 
-Make sure the working branch is `hol_branch`:
+Make sure the working branch is `hol_dft_branch`:
 
 ```bash
-git checkout hol_branch
+git checkout hol_dft_branch
 ```
 
-If `origin/hol_branch` is available, update to it:
+If `origin/hol_dft_branch` is available, update to it:
 
 ```bash
-git fetch origin hol_branch
-git reset --hard origin/hol_branch
+git fetch origin hol_dft_branch
+git reset --hard origin/hol_dft_branch
 ```
 
-If network/fetch is unavailable, reset to the local `hol_branch` instead:
+If network/fetch is unavailable, reset to the local `hol_dft_branch` instead:
 
 ```bash
-git reset --hard hol_branch
+git reset --hard hol_dft_branch
 ```
 
 ### 2. Clear local repo state, dbt artifacts, and Dataface output
@@ -242,7 +242,7 @@ On success, respond concisely:
 
 ```text
 Lab init is complete ✅
-The repo is on hol_branch, local changes/artifacts are cleared, Wizard lab permissions and skills are synced, dev schemas were reset, and the baseline dbt build passed.
+The repo is on hol_dft_branch, local changes/artifacts are cleared, Wizard lab permissions and skills are synced, dev schemas were reset, and the baseline dbt build passed.
 ```
 
 Do not show the lab Prompt 1. The user can trigger `$lab` when ready to start the workshop flow.
