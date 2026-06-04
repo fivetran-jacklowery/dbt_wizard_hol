@@ -179,7 +179,7 @@ After responding (assuming all checks pass), hand off to the dashboard finale wi
 **🟩 ⬇ YOUR NEXT PROMPT:** copy this as written, or type something similar in your own words:
 
 ```
-Using dbt Charts (dft), build a dashboard face called customer_insights that explores our customers — total customers and lifetime revenue, with breakdowns by tier and by region — querying the dbt models with ref(). Save it under faces/, validate it, then serve it and open it in my browser.
+Make me a dashboard of our customers — total customers and lifetime revenue, broken down by tier and region — and serve it.
 ```
 ---
 
