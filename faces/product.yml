@@ -1,0 +1,52 @@
+title: "Product #{{ product_id }}"
+description: One product — sales, the orders it appears in, and linked customers.
+
+source: warehouse
+
+variables:
+  product_id:
+    label: Product ID
+    input: text
+    default: "10"
+
+queries:
+  summary:
+    sql: |
+      SELECT ANY_VALUE(product_name)  AS product_name,
+             ANY_VALUE(category_name) AS category_name,
+             SUM(quantity)            AS units_sold,
+             SUM(line_revenue_after_discount) AS revenue,
+             COUNT(DISTINCT order_id)    AS orders,
+             COUNT(DISTINCT customer_id) AS customers
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('product_id', product_id) }}
+
+  order_lines:
+    sql: |
+      SELECT order_id, customer_id, order_date, quantity, line_revenue_after_discount
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('product_id', product_id) }}
+      ORDER BY order_date DESC
+
+charts:
+  kpi_revenue:   { type: kpi, query: summary, label: Revenue, value: revenue, format: currency }
+  kpi_units:     { type: kpi, query: summary, label: Units Sold, value: units_sold, format: integer }
+  kpi_orders:    { type: kpi, query: summary, label: Orders, value: orders, format: integer }
+  kpi_customers: { type: kpi, query: summary, label: Customers, value: customers, format: integer }
+
+  lines_table:
+    title: Order Lines — click to open the order or the customer
+    query: order_lines
+    type: table
+    link: "/order/?order_id={{ order_id }}"
+    style:
+      columns:
+        customer_id:
+          label: Customer
+          link: "/customer/?customer_id={{ customer_id }}"
+        line_revenue_after_discount: { label: Revenue, format: currency }
+        quantity: { label: Qty, format: integer }
+
+rows:
+  - cols: [kpi_revenue, kpi_units, kpi_orders, kpi_customers]
+  - lines_table

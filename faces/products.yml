@@ -1,0 +1,62 @@
+title: Products
+description: Canonical product list (built from real order-item sales) — click a row for detail.
+
+source: warehouse
+
+# Built from fct_order_items, not dim_products: the dim_products sales rollups
+# (total_units_sold / total_revenue) are empty in this project.
+variables:
+  category_name:
+    label: Category
+    input: text
+
+queries:
+  product_rows:
+    sql: |
+      SELECT product_id,
+             ANY_VALUE(product_name)  AS product_name,
+             ANY_VALUE(category_name) AS category_name,
+             SUM(quantity)            AS units_sold,
+             SUM(line_revenue_after_discount) AS revenue,
+             COUNT(DISTINCT order_id) AS orders
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('category_name', category_name) }}
+      GROUP BY product_id
+      ORDER BY revenue DESC
+
+  by_category:
+    sql: |
+      SELECT category_name,
+             SUM(line_revenue_after_discount) AS revenue,
+             SUM(quantity) AS units
+      FROM {{ ref('fct_order_items') }}
+      GROUP BY 1 ORDER BY revenue DESC
+
+charts:
+  category_bar:
+    title: Revenue by Category — click to filter
+    query: by_category
+    type: bar
+    x: category_name
+    y: revenue
+    format: currency
+    link: "/products/?category_name={{ x }}"
+
+  product_table:
+    title: Products — click a row for detail
+    query: product_rows
+    type: table
+    link: "/product/?product_id={{ product_id }}"
+    style:
+      columns:
+        product_name: { label: Product }
+        category_name:
+          label: Category
+          link: "/products/?category_name={{ category_name }}"
+        revenue: { label: Revenue, format: currency }
+        units_sold: { label: Units, format: integer }
+        orders: { label: Orders, format: integer }
+
+rows:
+  - category_bar
+  - product_table

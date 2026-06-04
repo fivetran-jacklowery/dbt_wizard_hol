@@ -137,6 +137,7 @@ charts:
     y: net_revenue
     format: "$,.0f"
     y_label: Net Revenue (USD)
+    link: "/orders/"
 
   category_mix:
     type: donut
@@ -145,6 +146,7 @@ charts:
     description: Share of net line-item revenue contributed by each category.
     theta: revenue
     color: category_name
+    link: "/products/?category_name={{ color }}"
     total:
       label: Total
       format: "$,.0f"
@@ -158,6 +160,7 @@ charts:
     y: product_name
     format: "$,.0f"
     sort: { by: revenue, order: desc }
+    link: "/products/"
 
   revenue_by_region_bar:
     type: bar
@@ -168,6 +171,7 @@ charts:
     y: revenue
     format: "$,.0f"
     sort: { by: revenue, order: desc }
+    link: "/customers/?region={{ x }}"
 
   customer_tier_bar:
     type: bar
@@ -176,6 +180,7 @@ charts:
     description: How many buying customers fall into each lifetime-revenue tier.
     x: customer_tier
     y: customers
+    link: "/customers/?customer_tier={{ x }}"
 
   tickets_priority_bar:
     type: bar

@@ -1,0 +1,57 @@
+title: "Order #{{ order_id }}"
+description: One order — totals, line items, linked products/customer, and any support tickets.
+
+source: warehouse
+
+variables:
+  order_id:
+    label: Order ID
+    input: text
+    default: "90001"
+
+queries:
+  header:
+    sql: |
+      SELECT order_id, customer_id, order_date, order_status, shipping_state,
+             order_revenue_after_discount, total_amount, line_item_count
+      FROM {{ ref('fct_orders') }}
+      WHERE {{ filter('order_id', order_id) }}
+
+  items:
+    sql: |
+      SELECT product_id, product_name, category_name, quantity, line_revenue_after_discount
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('order_id', order_id) }}
+      ORDER BY line_revenue_after_discount DESC
+
+  tickets:
+    sql: |
+      SELECT ticket_id, issue_type, priority, ticket_status
+      FROM {{ ref('fct_tickets') }}
+      WHERE {{ filter('order_id', order_id) }}
+
+charts:
+  kpi_revenue: { type: kpi, query: header, label: Order Revenue, value: order_revenue_after_discount, format: currency }
+  kpi_total:   { type: kpi, query: header, label: Total Billed, value: total_amount, format: currency }
+  kpi_items:   { type: kpi, query: header, label: Line Items, value: line_item_count, format: integer }
+
+  items_table:
+    title: Line Items — click to open the product
+    query: items
+    type: table
+    link: "/product/?product_id={{ product_id }}"
+    style:
+      columns:
+        product_name: { label: Product }
+        line_revenue_after_discount: { label: Revenue, format: currency }
+        quantity: { label: Qty, format: integer }
+
+  tickets_table:
+    title: Support Tickets
+    query: tickets
+    type: table
+
+rows:
+  - cols: [kpi_revenue, kpi_total, kpi_items]
+  - items_table
+  - tickets_table

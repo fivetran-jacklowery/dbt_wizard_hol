@@ -1,0 +1,59 @@
+title: "Customer #{{ customer_id }}"
+description: One customer — profile, orders, and support history.
+
+source: warehouse
+
+variables:
+  customer_id:
+    label: Customer ID
+    input: text          # populated from ?customer_id= on the link
+    default: "32"
+
+queries:
+  profile:
+    sql: |
+      SELECT full_name, region, customer_tier, customer_type,
+             lifetime_revenue, total_orders, avg_order_value, total_support_tickets
+      FROM {{ ref('dim_customers') }}
+      WHERE {{ filter('customer_id', customer_id) }}
+
+  orders:
+    sql: |
+      SELECT order_id, order_date, order_status,
+             order_revenue_after_discount, line_item_count
+      FROM {{ ref('fct_orders') }}
+      WHERE {{ filter('customer_id', customer_id) }}
+      ORDER BY order_date DESC
+
+  tickets:
+    sql: |
+      SELECT ticket_id, issue_type, priority, ticket_status, ticket_created_at
+      FROM {{ ref('fct_tickets') }}
+      WHERE {{ filter('customer_id', customer_id) }}
+      ORDER BY ticket_created_at DESC
+
+charts:
+  kpi_ltv:    { type: kpi, query: profile, label: Lifetime Revenue, value: lifetime_revenue, format: currency }
+  kpi_orders: { type: kpi, query: profile, label: Orders, value: total_orders, format: integer }
+  kpi_aov:    { type: kpi, query: profile, label: Avg Order Value, value: avg_order_value, format: currency }
+  kpi_tix:    { type: kpi, query: profile, label: Support Tickets, value: total_support_tickets, format: integer }
+
+  orders_table:
+    title: Orders — click a row to open the order
+    query: orders
+    type: table
+    link: "/order/?order_id={{ order_id }}"
+    style:
+      columns:
+        order_revenue_after_discount: { label: Revenue, format: currency }
+        line_item_count: { label: Items, format: integer }
+
+  tickets_table:
+    title: Support Tickets
+    query: tickets
+    type: table
+
+rows:
+  - cols: [kpi_ltv, kpi_orders, kpi_aov, kpi_tix]
+  - orders_table
+  - tickets_table
