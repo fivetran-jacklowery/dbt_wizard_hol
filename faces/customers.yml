@@ -19,6 +19,19 @@ variables:
     input: text
 
 queries:
+  kpis:
+    sql: |
+      SELECT
+        COUNT(*)                  AS customers,
+        SUM(lifetime_revenue)     AS lifetime_revenue,
+        AVG(lifetime_revenue)     AS avg_ltv,
+        SUM(total_support_tickets) AS tickets
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+        AND {{ filter('region', region) }}
+        AND {{ filter('customer_tier', customer_tier) }}
+        AND {{ filter('customer_type', customer_type) }}
+
   customer_rows:
     sql: |
       SELECT customer_id, full_name, region, customer_tier, customer_type,
@@ -44,7 +57,19 @@ queries:
       WHERE has_ever_ordered AND {{ filter('customer_tier', customer_tier) }}
       GROUP BY 1 ORDER BY lifetime_revenue DESC
 
+  by_type:
+    sql: |
+      SELECT customer_type, COUNT(*) AS customers, SUM(lifetime_revenue) AS lifetime_revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY lifetime_revenue DESC
+
 charts:
+  kpi_customers: { type: kpi, query: kpis, label: Customers, value: customers, format: ",.0f" }
+  kpi_revenue:   { type: kpi, query: kpis, label: Lifetime Revenue, value: lifetime_revenue, format: "$,.0f" }
+  kpi_avg_ltv:   { type: kpi, query: kpis, label: Avg Lifetime Value, value: avg_ltv, format: "$,.0f" }
+  kpi_tickets:   { type: kpi, query: kpis, label: Support Tickets, value: tickets, format: ",.0f" }
+
   tier_bar:
     title: Customers by Tier — click to filter
     query: by_tier
@@ -60,7 +85,18 @@ charts:
     x: region
     y: lifetime_revenue
     format: currency
+    sort: { by: lifetime_revenue, order: desc }
     link: "/customers/?region={{ x }}"
+
+  type_bar:
+    title: Revenue by Customer Type — click to filter
+    query: by_type
+    type: bar
+    x: customer_type
+    y: lifetime_revenue
+    format: currency
+    sort: { by: lifetime_revenue, order: desc }
+    link: "/customers/?customer_type={{ x }}"
 
   customer_table:
     title: Customers — click a row for detail
@@ -81,5 +117,6 @@ charts:
         total_support_tickets: { label: Tickets, format: integer }
 
 rows:
-  - cols: [tier_bar, region_bar]
+  - cols: [kpi_customers, kpi_revenue, kpi_avg_ltv, kpi_tickets]
+  - cols: [tier_bar, region_bar, type_bar]
   - customer_table

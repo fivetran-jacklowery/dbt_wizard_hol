@@ -14,7 +14,8 @@ queries:
   header:
     sql: |
       SELECT order_id, customer_id, order_date, order_status, shipping_state,
-             order_revenue_after_discount, total_amount, line_item_count
+             order_revenue_after_discount, total_amount, shipping_cost,
+             line_item_count, total_quantity
       FROM {{ ref('fct_orders') }}
       WHERE {{ filter('order_id', order_id) }}
 
@@ -35,6 +36,8 @@ charts:
   kpi_revenue: { type: kpi, query: header, label: Order Revenue, value: order_revenue_after_discount, format: currency }
   kpi_total:   { type: kpi, query: header, label: Total Billed, value: total_amount, format: currency }
   kpi_items:   { type: kpi, query: header, label: Line Items, value: line_item_count, format: integer }
+  kpi_qty:     { type: kpi, query: header, label: Units, value: total_quantity, format: integer }
+  kpi_ship:    { type: kpi, query: header, label: Shipping, value: shipping_cost, format: currency }
 
   items_table:
     title: Line Items — click to open the product
@@ -44,8 +47,9 @@ charts:
     style:
       columns:
         product_name: { label: Product }
-        line_revenue_after_discount: { label: Revenue, format: currency }
+        category_name: { label: Category }
         quantity: { label: Qty, format: integer }
+        line_revenue_after_discount: { label: Revenue, format: currency }
 
   tickets_table:
     title: Support Tickets
@@ -53,6 +57,5 @@ charts:
     type: table
 
 rows:
-  - cols: [kpi_revenue, kpi_total, kpi_items]
-  - items_table
-  - tickets_table
+  - cols: [kpi_revenue, kpi_total, kpi_items, kpi_qty, kpi_ship]
+  - cols: [items_table, tickets_table]

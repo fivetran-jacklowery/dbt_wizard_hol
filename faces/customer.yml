@@ -1,5 +1,5 @@
 title: "Customer #{{ customer_id }}"
-description: One customer — profile, orders, and support history.
+description: One customer — profile, spend over time, orders, and support history.
 
 source: warehouse
 theme: cream
@@ -8,15 +8,23 @@ variables:
   customer_id:
     label: Customer ID
     input: text          # populated from ?customer_id= on the link
-    default: "32"
+    default: "406"
 
 queries:
   profile:
     sql: |
       SELECT full_name, region, customer_tier, customer_type,
-             lifetime_revenue, total_orders, avg_order_value, total_support_tickets
+             lifetime_revenue, total_orders, avg_order_value,
+             total_support_tickets, return_rate, customer_tenure_days
       FROM {{ ref('dim_customers') }}
       WHERE {{ filter('customer_id', customer_id) }}
+
+  monthly_spend:
+    sql: |
+      SELECT order_month, SUM(order_revenue_after_discount) AS spend
+      FROM {{ ref('fct_orders') }}
+      WHERE {{ filter('customer_id', customer_id) }}
+      GROUP BY 1 ORDER BY 1
 
   orders:
     sql: |
@@ -34,10 +42,20 @@ queries:
       ORDER BY ticket_created_at DESC
 
 charts:
-  kpi_ltv:    { type: kpi, query: profile, label: Lifetime Revenue, value: lifetime_revenue, format: currency }
-  kpi_orders: { type: kpi, query: profile, label: Orders, value: total_orders, format: integer }
-  kpi_aov:    { type: kpi, query: profile, label: Avg Order Value, value: avg_order_value, format: currency }
-  kpi_tix:    { type: kpi, query: profile, label: Support Tickets, value: total_support_tickets, format: integer }
+  kpi_ltv:     { type: kpi, query: profile, label: Lifetime Revenue, value: lifetime_revenue, format: currency }
+  kpi_orders:  { type: kpi, query: profile, label: Orders, value: total_orders, format: integer }
+  kpi_aov:     { type: kpi, query: profile, label: Avg Order Value, value: avg_order_value, format: currency }
+  kpi_tix:     { type: kpi, query: profile, label: Support Tickets, value: total_support_tickets, format: integer }
+  kpi_return:  { type: kpi, query: profile, label: Return Rate, value: return_rate, format: ".0%" }
+  kpi_tenure:  { type: kpi, query: profile, label: Tenure (days), value: customer_tenure_days, format: integer }
+
+  spend_trend:
+    title: Spend Over Time
+    query: monthly_spend
+    type: bar
+    x: order_month
+    y: spend
+    format: currency
 
   orders_table:
     title: Orders — click a row to open the order
@@ -46,6 +64,9 @@ charts:
     link: "/order/?order_id={{ order_id }}"
     style:
       columns:
+        order_id: { label: Order }
+        order_date: { label: Date }
+        order_status: { label: Status }
         order_revenue_after_discount: { label: Revenue, format: currency }
         line_item_count: { label: Items, format: integer }
 
@@ -55,6 +76,6 @@ charts:
     type: table
 
 rows:
-  - cols: [kpi_ltv, kpi_orders, kpi_aov, kpi_tix]
-  - orders_table
-  - tickets_table
+  - cols: [kpi_ltv, kpi_orders, kpi_aov, kpi_tix, kpi_return, kpi_tenure]
+  - spend_trend
+  - cols: [orders_table, tickets_table]

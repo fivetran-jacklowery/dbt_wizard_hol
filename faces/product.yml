@@ -1,5 +1,5 @@
 title: "Product #{{ product_id }}"
-description: One product — sales, the orders it appears in, and linked customers.
+description: One product — sales over time, the orders it appears in, and linked customers.
 
 source: warehouse
 theme: cream
@@ -22,6 +22,15 @@ queries:
       FROM {{ ref('fct_order_items') }}
       WHERE {{ filter('product_id', product_id) }}
 
+  monthly_sales:
+    sql: |
+      SELECT order_month,
+             SUM(line_revenue_after_discount) AS revenue,
+             SUM(quantity) AS units
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('product_id', product_id) }}
+      GROUP BY 1 ORDER BY 1
+
   order_lines:
     sql: |
       SELECT order_id, customer_id, order_date, quantity, line_revenue_after_discount
@@ -35,6 +44,21 @@ charts:
   kpi_orders:    { type: kpi, query: summary, label: Orders, value: orders, format: integer }
   kpi_customers: { type: kpi, query: summary, label: Customers, value: customers, format: integer }
 
+  revenue_trend:
+    title: Revenue by Month
+    query: monthly_sales
+    type: bar
+    x: order_month
+    y: revenue
+    format: currency
+
+  units_trend:
+    title: Units Sold by Month
+    query: monthly_sales
+    type: line
+    x: order_month
+    y: units
+
   lines_table:
     title: Order Lines — click to open the order or the customer
     query: order_lines
@@ -42,12 +66,15 @@ charts:
     link: "/order/?order_id={{ order_id }}"
     style:
       columns:
+        order_id: { label: Order }
+        order_date: { label: Date }
         customer_id:
           label: Customer
           link: "/customer/?customer_id={{ customer_id }}"
-        line_revenue_after_discount: { label: Revenue, format: currency }
         quantity: { label: Qty, format: integer }
+        line_revenue_after_discount: { label: Revenue, format: currency }
 
 rows:
   - cols: [kpi_revenue, kpi_units, kpi_orders, kpi_customers]
+  - cols: [revenue_trend, units_trend]
   - lines_table

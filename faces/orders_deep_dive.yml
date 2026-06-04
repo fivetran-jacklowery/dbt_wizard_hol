@@ -1,12 +1,11 @@
 title: Orders — Deep Dive
-description: Order volume, revenue trends, and geographic breakdown — one row per order from fct_orders.
+description: Order volume, revenue trends, geography, and top customers — from fct_orders.
 
 source: warehouse
 theme: cream
 
 queries:
   kpis:
-    description: Single-row aggregate for headline KPI tiles.
     sql: |
       SELECT
         COUNT(*)                          AS total_orders,
@@ -16,66 +15,44 @@ queries:
       FROM {{ ref('fct_orders') }}
 
   monthly_trend:
-    description: Monthly order count and revenue for trend charts.
     sql: |
       SELECT
         DATE_TRUNC('month', order_date::DATE)   AS order_month,
         COUNT(*)                                 AS order_count,
-        ROUND(SUM(order_revenue), 2)             AS monthly_revenue
+        ROUND(SUM(order_revenue), 2)             AS monthly_revenue,
+        ROUND(AVG(order_revenue), 2)             AS avg_order_value
       FROM {{ ref('fct_orders') }}
       WHERE order_date < DATE_TRUNC('month', CURRENT_DATE)
       GROUP BY DATE_TRUNC('month', order_date::DATE)
       ORDER BY order_month
 
   revenue_by_state:
-    description: Revenue and order count by shipping state, top 10.
     sql: |
-      SELECT
-        shipping_state,
-        COUNT(*)                          AS order_count,
-        ROUND(SUM(order_revenue), 2)      AS revenue
+      SELECT shipping_state,
+             COUNT(*)                     AS order_count,
+             ROUND(SUM(order_revenue), 2) AS revenue
       FROM {{ ref('fct_orders') }}
       GROUP BY shipping_state
       ORDER BY revenue DESC
       LIMIT 10
 
+  top_customers:
+    sql: |
+      SELECT customer_id,
+             COUNT(*)                     AS orders,
+             ROUND(SUM(order_revenue), 2) AS revenue
+      FROM {{ ref('fct_orders') }}
+      GROUP BY customer_id
+      ORDER BY revenue DESC
+      LIMIT 10
+
 charts:
-  kpi_orders:
-    description: Total number of orders placed.
-    label: Total Orders
-    query: kpis
-    type: kpi
-    value: total_orders
-    format: integer
-
-  kpi_revenue:
-    description: Sum of order revenue across all orders.
-    label: Total Revenue
-    query: kpis
-    type: kpi
-    value: total_revenue
-    format: currency_whole
-
-  kpi_avg_order:
-    description: Average revenue per order.
-    label: Avg Order Value
-    query: kpis
-    type: kpi
-    value: avg_order_value
-    format: currency_whole
-
-  monthly_orders:
-    description: Monthly order volume over time.
-    title: Monthly Order Volume
-    query: monthly_trend
-    type: bar
-    x: order_month
-    y: order_count
-    style:
-      orientation: vertical
+  kpi_orders:    { type: kpi, query: kpis, label: Total Orders, value: total_orders, format: integer }
+  kpi_revenue:   { type: kpi, query: kpis, label: Total Revenue, value: total_revenue, format: currency_whole }
+  kpi_avg_order: { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, format: currency_whole }
+  kpi_items:     { type: kpi, query: kpis, label: Avg Items / Order, value: avg_items_per_order, format: ",.1f" }
 
   monthly_revenue:
-    description: Monthly revenue trend over time.
     title: Monthly Revenue Trend
     query: monthly_trend
     type: line
@@ -83,19 +60,44 @@ charts:
     y: monthly_revenue
     format: currency_whole
 
+  monthly_orders:
+    title: Monthly Order Volume
+    query: monthly_trend
+    type: bar
+    x: order_month
+    y: order_count
+
+  aov_trend:
+    title: Avg Order Value by Month
+    query: monthly_trend
+    type: line
+    x: order_month
+    y: avg_order_value
+    format: currency_whole
+
   revenue_by_state:
-    description: Revenue by shipping state — top 10 states.
     title: Revenue by State (Top 10)
     query: revenue_by_state
     type: bar
     x: shipping_state
     y: revenue
     format: currency_whole
+    sort: { by: revenue, order: desc }
+
+  top_customers_bar:
+    title: Top Customers by Revenue — click to open
+    query: top_customers
+    type: bar
+    x: customer_id
+    y: revenue
+    format: currency_whole
+    sort: { by: revenue, order: desc }
+    link: "/customer/?customer_id={{ x }}"
 
 rows:
   - title: Summary
-    cols: [kpi_orders, kpi_revenue, kpi_avg_order]
+    cols: [kpi_orders, kpi_revenue, kpi_avg_order, kpi_items]
   - title: Trends
-    cols: [monthly_revenue, monthly_orders]
-  - title: Geography
-    cols: [revenue_by_state]
+    cols: [monthly_revenue, monthly_orders, aov_trend]
+  - title: Geography & Customers
+    cols: [revenue_by_state, top_customers_bar]

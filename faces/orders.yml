@@ -16,6 +16,18 @@ variables:
     input: text
 
 queries:
+  kpis:
+    sql: |
+      SELECT
+        COUNT(*)                          AS orders,
+        SUM(order_revenue_after_discount) AS revenue,
+        AVG(total_amount)                 AS avg_order_value,
+        SUM(line_item_count)              AS items
+      FROM {{ ref('fct_orders') }}
+      WHERE {{ filter('order_status', order_status) }}
+        AND {{ filter('shipping_state', shipping_state) }}
+        AND {{ filter('customer_id', customer_id) }}
+
   order_rows:
     sql: |
       SELECT order_id, order_date, customer_id, shipping_state, order_status,
@@ -34,7 +46,21 @@ queries:
       FROM {{ ref('fct_orders') }}
       GROUP BY 1 ORDER BY revenue DESC LIMIT 15
 
+  by_month:
+    sql: |
+      SELECT order_month, COUNT(*) AS orders
+      FROM {{ ref('fct_orders') }}
+      WHERE order_month < DATE_TRUNC('month', CURRENT_DATE)
+        AND {{ filter('shipping_state', shipping_state) }}
+        AND {{ filter('customer_id', customer_id) }}
+      GROUP BY 1 ORDER BY 1
+
 charts:
+  kpi_orders:  { type: kpi, query: kpis, label: Orders, value: orders, format: ",.0f" }
+  kpi_revenue: { type: kpi, query: kpis, label: Revenue, value: revenue, format: "$,.0f" }
+  kpi_aov:     { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, format: "$,.2f" }
+  kpi_items:   { type: kpi, query: kpis, label: Line Items, value: items, format: ",.0f" }
+
   state_bar:
     title: Revenue by State — click to filter
     query: by_state
@@ -42,7 +68,15 @@ charts:
     x: shipping_state
     y: revenue
     format: currency
+    sort: { by: revenue, order: desc }
     link: "/orders/?shipping_state={{ x }}"
+
+  month_bar:
+    title: Orders by Month
+    query: by_month
+    type: bar
+    x: order_month
+    y: orders
 
   order_table:
     title: Orders — click a row for detail
@@ -51,15 +85,19 @@ charts:
     link: "/order/?order_id={{ order_id }}"
     style:
       columns:
+        order_id: { label: Order }
+        order_date: { label: Date }
         customer_id:
           label: Customer
           link: "/customer/?customer_id={{ customer_id }}"
         shipping_state:
           label: State
           link: "/orders/?shipping_state={{ shipping_state }}"
+        order_status: { label: Status }
         order_revenue_after_discount: { label: Revenue, format: currency }
         line_item_count: { label: Items, format: integer }
 
 rows:
-  - state_bar
+  - cols: [kpi_orders, kpi_revenue, kpi_aov, kpi_items]
+  - cols: [state_bar, month_bar]
   - order_table

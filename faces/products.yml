@@ -12,6 +12,16 @@ variables:
     input: text
 
 queries:
+  kpis:
+    sql: |
+      SELECT
+        SUM(line_revenue_after_discount) AS revenue,
+        SUM(quantity)                    AS units,
+        COUNT(DISTINCT order_id)         AS orders,
+        COUNT(DISTINCT product_id)       AS products
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('category_name', category_name) }}
+
   product_rows:
     sql: |
       SELECT product_id,
@@ -33,7 +43,19 @@ queries:
       FROM {{ ref('fct_order_items') }}
       GROUP BY 1 ORDER BY revenue DESC
 
+  by_brand:
+    sql: |
+      SELECT brand, SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('category_name', category_name) }}
+      GROUP BY 1 ORDER BY revenue DESC
+
 charts:
+  kpi_revenue:  { type: kpi, query: kpis, label: Revenue, value: revenue, format: "$,.0f" }
+  kpi_units:    { type: kpi, query: kpis, label: Units Sold, value: units, format: ",.0f" }
+  kpi_orders:   { type: kpi, query: kpis, label: Orders, value: orders, format: ",.0f" }
+  kpi_products: { type: kpi, query: kpis, label: Products Sold, value: products, format: ",.0f" }
+
   category_bar:
     title: Revenue by Category — click to filter
     query: by_category
@@ -43,6 +65,15 @@ charts:
     format: currency
     sort: { by: revenue, order: desc }
     link: "/products/?category_name={{ x }}"
+
+  brand_bar:
+    title: Revenue by Brand
+    query: by_brand
+    type: bar
+    x: brand
+    y: revenue
+    format: currency
+    sort: { by: revenue, order: desc }
 
   product_table:
     title: Products — click a row for detail
@@ -60,5 +91,6 @@ charts:
         orders: { label: Orders, format: integer }
 
 rows:
-  - category_bar
+  - cols: [kpi_revenue, kpi_units, kpi_orders, kpi_products]
+  - cols: [category_bar, brand_bar]
   - product_table

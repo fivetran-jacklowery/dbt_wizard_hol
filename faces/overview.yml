@@ -9,155 +9,112 @@ theme: cream
 
 queries:
   kpis:
-    description: Headline totals across all non-cancelled orders.
     sql: |
-      select
-        sum(order_revenue_after_discount) as total_revenue,
-        count(*)                          as total_orders,
-        avg(total_amount)                 as avg_order_value,
-        count(distinct customer_id)       as buying_customers
-      from {{ ref('fct_orders') }}
-      where is_cancelled = false
+      SELECT
+        SUM(order_revenue_after_discount) AS total_revenue,
+        COUNT(*)                          AS total_orders,
+        AVG(total_amount)                 AS avg_order_value,
+        COUNT(DISTINCT customer_id)       AS buying_customers
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false
 
   monthly_revenue:
-    description: Net monthly revenue trend, summed from non-cancelled orders.
     sql: |
-      select
-        order_month,
-        sum(order_revenue_after_discount) as net_revenue
-      from {{ ref('fct_orders') }}
-      where is_cancelled = false
-        and order_month < date_trunc('month', current_date)
-      group by 1
-      order by 1
+      SELECT order_month, SUM(order_revenue_after_discount) AS net_revenue
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false
+        AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+      GROUP BY 1 ORDER BY 1
+
+  orders_by_month:
+    sql: |
+      SELECT order_month, COUNT(*) AS orders
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false
+        AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+      GROUP BY 1 ORDER BY 1
 
   revenue_by_category:
-    description: Net line-item revenue split by product category, from fct_order_items.
     sql: |
-      select
-        category_name,
-        sum(line_revenue_after_discount) as revenue
-      from {{ ref('fct_order_items') }}
-      group by 1
-      order by revenue desc
+      SELECT category_name, SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      GROUP BY 1 ORDER BY revenue DESC
 
   top_products:
-    description: The ten highest net-revenue products, from fct_order_items.
     sql: |
-      select
-        product_name,
-        sum(line_revenue_after_discount) as revenue
-      from {{ ref('fct_order_items') }}
-      group by 1
-      order by revenue desc
-      limit 10
+      SELECT product_name, SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      GROUP BY 1 ORDER BY revenue DESC LIMIT 10
 
   revenue_by_region:
-    description: Buying customers and lifetime revenue by geographic region, from dim_customers.
     sql: |
-      select
-        region,
-        sum(lifetime_revenue) as revenue
-      from {{ ref('dim_customers') }}
-      where has_ever_ordered
-      group by 1
-      order by revenue desc
+      SELECT region, SUM(lifetime_revenue) AS revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY revenue DESC
+
+  revenue_by_customer_type:
+    sql: |
+      SELECT customer_type, SUM(lifetime_revenue) AS revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY revenue DESC
 
   customer_tiers:
-    description: Customers and lifetime revenue by tier (bronze/silver/gold/platinum), buyers only.
     sql: |
-      select
-        customer_tier,
-        count(*)              as customers,
-        sum(lifetime_revenue) as lifetime_revenue
-      from {{ ref('dim_customers') }}
-      where has_ever_ordered
-      group by 1
-      order by
-        case customer_tier
-          when 'platinum' then 1
-          when 'gold'     then 2
-          when 'silver'   then 3
-          when 'bronze'   then 4
-        end
+      SELECT customer_tier, COUNT(*) AS customers
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY customers DESC
 
   tickets_by_priority:
-    description: Open and historical support ticket volume by priority, from fct_tickets.
     sql: |
-      select
-        priority,
-        count(*) as tickets
-      from {{ ref('fct_tickets') }}
-      group by 1
-      order by
-        case priority
-          when 'critical' then 1
-          when 'high'     then 2
-          when 'medium'   then 3
-          when 'low'      then 4
-        end
+      SELECT priority, COUNT(*) AS tickets
+      FROM {{ ref('fct_tickets') }}
+      GROUP BY 1 ORDER BY tickets DESC
+
+  tickets_by_issue:
+    sql: |
+      SELECT issue_type, COUNT(*) AS tickets
+      FROM {{ ref('fct_tickets') }}
+      GROUP BY 1 ORDER BY tickets DESC
 
 charts:
-  kpi_revenue:
-    type: kpi
-    query: kpis
-    description: Total net revenue across all non-cancelled orders.
-    label: Total Revenue
-    value: total_revenue
-    format: "$,.0f"
-
-  kpi_orders:
-    type: kpi
-    query: kpis
-    description: Total non-cancelled orders placed.
-    label: Orders
-    value: total_orders
-    format: ",.0f"
-
-  kpi_aov:
-    type: kpi
-    query: kpis
-    description: Average order value (total billed amount per order).
-    label: Avg Order Value
-    value: avg_order_value
-    format: "$,.2f"
-
-  kpi_customers:
-    type: kpi
-    query: kpis
-    description: Distinct customers who have placed at least one order.
-    label: Buying Customers
-    value: buying_customers
-    format: ",.0f"
+  kpi_revenue:   { type: kpi, query: kpis, label: Total Revenue, value: total_revenue, format: "$,.0f" }
+  kpi_orders:    { type: kpi, query: kpis, label: Orders, value: total_orders, format: ",.0f" }
+  kpi_aov:       { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, format: "$,.2f" }
+  kpi_customers: { type: kpi, query: kpis, label: Buying Customers, value: buying_customers, format: ",.0f" }
 
   revenue_trend:
-    type: line
-    query: monthly_revenue
     title: Monthly Net Revenue
-    description: How net revenue has trended month over month.
+    query: monthly_revenue
+    type: line
     x: order_month
     y: net_revenue
     format: "$,.0f"
-    y_label: Net Revenue (USD)
+    link: "/orders/"
+
+  orders_trend:
+    title: Orders by Month
+    query: orders_by_month
+    type: bar
+    x: order_month
+    y: orders
     link: "/orders/"
 
   category_mix:
-    type: donut
-    query: revenue_by_category
     title: Revenue by Category
-    description: Share of net line-item revenue contributed by each category.
+    query: revenue_by_category
+    type: donut
     theta: revenue
     color: category_name
     link: "/products/?category_name={{ color }}"
-    total:
-      label: Total
-      format: "$,.0f"
+    total: { label: Total, format: "$,.0f" }
 
   top_products_bar:
-    type: bar
-    query: top_products
     title: Top 10 Products by Revenue
-    description: The highest net-revenue products across the catalog.
+    query: top_products
+    type: bar
     x: product_name
     y: revenue
     format: "$,.0f"
@@ -165,44 +122,51 @@ charts:
     link: "/products/"
 
   revenue_by_region_bar:
-    type: bar
-    query: revenue_by_region
     title: Lifetime Revenue by Region
-    description: Where buying customers' lifetime revenue is concentrated.
+    query: revenue_by_region
+    type: bar
     x: region
     y: revenue
     format: "$,.0f"
     sort: { by: revenue, order: desc }
     link: "/customers/?region={{ x }}"
 
-  customer_tier_bar:
+  customer_type_bar:
+    title: Revenue by Customer Type
+    query: revenue_by_customer_type
     type: bar
-    query: customer_tiers
+    x: customer_type
+    y: revenue
+    format: "$,.0f"
+    sort: { by: revenue, order: desc }
+    link: "/customers/?customer_type={{ x }}"
+
+  customer_tier_bar:
     title: Customers by Tier
-    description: How many buying customers fall into each lifetime-revenue tier.
+    query: customer_tiers
+    type: bar
     x: customer_tier
     y: customers
     link: "/customers/?customer_tier={{ x }}"
 
   tickets_priority_bar:
-    type: bar
-    query: tickets_by_priority
     title: Support Tickets by Priority
-    description: Support ticket volume broken out by priority level.
+    query: tickets_by_priority
+    type: bar
     x: priority
     y: tickets
 
+  tickets_issue_bar:
+    title: Support Tickets by Issue Type
+    query: tickets_by_issue
+    type: bar
+    x: issue_type
+    y: tickets
+    sort: { by: tickets, order: desc }
+
 rows:
-  - cols:
-      - kpi_revenue
-      - kpi_orders
-      - kpi_aov
-      - kpi_customers
-  - cols:
-      - revenue_trend
-      - category_mix
-  - top_products_bar
-  - cols:
-      - revenue_by_region_bar
-      - customer_tier_bar
-      - tickets_priority_bar
+  - cols: [kpi_revenue, kpi_orders, kpi_aov, kpi_customers]
+  - cols: [revenue_trend, orders_trend]
+  - cols: [category_mix, top_products_bar]
+  - cols: [revenue_by_region_bar, customer_type_bar, customer_tier_bar]
+  - cols: [tickets_priority_bar, tickets_issue_bar]
