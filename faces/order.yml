@@ -2,6 +2,7 @@ title: "Order #{{ order_id }}"
 description: One order — totals, line items, linked products/customer, and any support tickets.
 
 source: warehouse
+theme: cream
 
 variables:
   order_id:

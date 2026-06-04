@@ -2,6 +2,7 @@ title: Orders
 description: Canonical order list — filter, then click a row to open the order detail.
 
 source: warehouse
+theme: cream
 
 variables:
   order_status:

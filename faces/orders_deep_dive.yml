@@ -2,6 +2,7 @@ title: Orders — Deep Dive
 description: Order volume, revenue trends, and geographic breakdown — one row per order from fct_orders.
 
 source: warehouse
+theme: cream
 
 queries:
   kpis:
@@ -22,6 +23,7 @@ queries:
         COUNT(*)                                 AS order_count,
         ROUND(SUM(order_revenue), 2)             AS monthly_revenue
       FROM {{ ref('fct_orders') }}
+      WHERE order_date < DATE_TRUNC('month', CURRENT_DATE)
       GROUP BY DATE_TRUNC('month', order_date::DATE)
       ORDER BY order_month
 

@@ -5,6 +5,7 @@ description: "Executive overview of the dbt Wizard store: revenue, orders, custo
 # in dataface.yml). Use dbt ref() so tables resolve to each user's own marts
 # schema (e.g. dave_fowler_marts) — bare table names do NOT resolve.
 source: warehouse
+theme: cream
 
 queries:
   kpis:
@@ -26,6 +27,7 @@ queries:
         sum(order_revenue_after_discount) as net_revenue
       from {{ ref('fct_orders') }}
       where is_cancelled = false
+        and order_month < date_trunc('month', current_date)
       group by 1
       order by 1
 
@@ -156,8 +158,8 @@ charts:
     query: top_products
     title: Top 10 Products by Revenue
     description: The highest net-revenue products across the catalog.
-    x: revenue
-    y: product_name
+    x: product_name
+    y: revenue
     format: "$,.0f"
     sort: { by: revenue, order: desc }
     link: "/products/"

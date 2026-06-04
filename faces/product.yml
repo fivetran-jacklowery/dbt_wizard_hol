@@ -2,6 +2,7 @@ title: "Product #{{ product_id }}"
 description: One product — sales, the orders it appears in, and linked customers.
 
 source: warehouse
+theme: cream
 
 variables:
   product_id:

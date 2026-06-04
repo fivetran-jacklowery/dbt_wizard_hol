@@ -2,6 +2,7 @@ title: "Customer #{{ customer_id }}"
 description: One customer — profile, orders, and support history.
 
 source: warehouse
+theme: cream
 
 variables:
   customer_id:

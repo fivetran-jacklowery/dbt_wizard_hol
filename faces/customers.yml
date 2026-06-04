@@ -2,6 +2,7 @@ title: Customers
 description: Canonical customer list — filter, then click a row to open the customer detail.
 
 source: warehouse
+theme: cream
 
 # Variables double as the filter bar AND the link targets that other faces
 # drill into (e.g. overview → /customers/?region=West). filter() is null-safe,
