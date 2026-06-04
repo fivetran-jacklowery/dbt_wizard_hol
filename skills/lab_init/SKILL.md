@@ -3,7 +3,7 @@ name: lab_init
 description: >
   Reset and prepare the dbt Wizard hands-on lab repo before or after a lab run.
   Use when the user asks to initialize, reset, clean up, prepare the HOL repo,
-  clear Snowflake/dev schemas, restore hol_branch, remove local changes, clear
+  clear Snowflake/dev schemas, restore hol_dft_branch, remove local changes, clear
   dbt artifacts, or verify the local lab skills setup.
 ---
 
@@ -37,26 +37,26 @@ git branch --show-current
 
 If this is not the dbt Wizard HOL repo, stop and tell the user.
 
-Make sure the working branch is `hol_branch`:
+Make sure the working branch is `hol_dft_branch`:
 
 ```bash
-git checkout hol_branch
+git checkout hol_dft_branch
 ```
 
-If `origin/hol_branch` is available, update to it:
+If `origin/hol_dft_branch` is available, update to it:
 
 ```bash
-git fetch origin hol_branch
-git reset --hard origin/hol_branch
+git fetch origin hol_dft_branch
+git reset --hard origin/hol_dft_branch
 ```
 
-If network/fetch is unavailable, reset to the local `hol_branch` instead:
+If network/fetch is unavailable, reset to the local `hol_dft_branch` instead:
 
 ```bash
-git reset --hard hol_branch
+git reset --hard hol_dft_branch
 ```
 
-### 2. Clear local repo state and dbt artifacts
+### 2. Clear local repo state, dbt artifacts, and Dataface output
 
 Run:
 
@@ -66,21 +66,34 @@ git clean -fd
 rm -rf target
 ```
 
+`git clean -fd` already removes any attendee-created (untracked) faces, and
+`git restore .` reverts edits to the committed baseline faces. Also clear the
+Dataface render/cache artifacts, which are gitignored and therefore survive a
+normal clean — this is what guarantees no stray dashboards or `.duckdb` caches
+carry over between attendees:
+
+```bash
+git clean -fdx faces renders 2>/dev/null || true
+git restore faces 2>/dev/null || true
+```
+
 Then verify:
 
 ```bash
 git status --short
 ```
 
-Expected: no output.
+Expected: no output. The `faces/` directory should now contain only the
+committed baseline lab faces.
 
 ### 3. Sync local Wizard skills
 
-The repo should expose exactly two local lab skills:
+The repo should expose exactly three local lab skills:
 
 ```text
 skills/lab/SKILL.md
 skills/lab_init/SKILL.md
+skills/install_dbt_charts/SKILL.md
 ```
 
 Run:
@@ -91,7 +104,7 @@ find skills -mindepth 2 -maxdepth 2 -name SKILL.md | sort
 
 If the result differs, stop and surface the mismatch. There should be no root-level `skills/SKILL.md`.
 
-Then make the Wizard user skills directory match this repo. Remove stale non-system skill entries, preserve `.system`, and install/update only `lab` and `lab_init`:
+Then make the Wizard user skills directory match this repo. Remove stale non-system skill entries, preserve `.system`, and install/update only `lab`, `lab_init`, and `install_dbt_charts`:
 
 ```bash
 python3 - <<'PY'
@@ -105,8 +118,8 @@ wizard_home = Path(os.environ.get('DBT_WIZARD_HOME', str(Path.home() / '.dbt' / 
 wizard_skills = wizard_home / 'skills'
 expected = {p.name for p in repo_skills.iterdir() if p.is_dir() and (p / 'SKILL.md').exists()}
 
-if expected != {'lab', 'lab_init'}:
-    raise SystemExit(f'Expected repo skills lab and lab_init, found: {sorted(expected)}')
+if expected != {'lab', 'lab_init', 'install_dbt_charts'}:
+    raise SystemExit(f'Expected repo skills lab, lab_init, install_dbt_charts, found: {sorted(expected)}')
 
 wizard_skills.mkdir(parents=True, exist_ok=True)
 
@@ -150,6 +163,7 @@ find "${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills" -mindepth 1 -maxdepth 2 -nam
 Expected:
 
 ```text
+~/.dbt/wizard/skills/install_dbt_charts/SKILL.md
 ~/.dbt/wizard/skills/lab/SKILL.md
 ~/.dbt/wizard/skills/lab_init/SKILL.md
 ```
@@ -169,7 +183,27 @@ TOML
 chmod 600 .dbt/wizard/config.toml
 ```
 
-### 5. Identify active dbt target schema
+### 5. Ensure Dataface (dft) is installed
+
+The lab now includes a Dataface ("dbt Charts") section, so `dft` must be present.
+Check for it:
+
+```bash
+~/snowsummit2026/dft_venv/bin/dft --version 2>/dev/null \
+  || dft --version 2>/dev/null \
+  || echo "dft missing"
+```
+
+If `dft` is missing, install it by running the `$install_dbt_charts` skill, then
+continue. Do not hand-roll the install here — that skill is the single source of
+truth for the Dataface setup (Python 3.13, `pip install dataface`, `dft init`,
+and the VS Code extension).
+
+If `dft` is already installed, confirm the project is still scaffolded
+(`dataface.yml` and `faces/` exist from the repo). The faces reset in step 2
+already cleared any attendee-created dashboards.
+
+### 6. Identify active dbt target schema
 
 Run:
 
@@ -179,7 +213,7 @@ uvx --from dbt-snowflake dbt debug
 
 Use the active `database` and `schema` from the connection block. The schema is the target prefix used for cleanup.
 
-### 6. Drop only dbt-managed dev schemas
+### 7. Drop only dbt-managed dev schemas
 
 Using the warehouse mutation tool, drop these four schemas in the active database, replacing `<database>` and `<target>` from dbt debug:
 
@@ -192,7 +226,7 @@ drop schema if exists <database>.<target>_marketing cascade;
 
 Run each statement separately if the tool does not allow multi-statement execution.
 
-### 7. Rebuild the baseline project
+### 8. Rebuild the baseline project
 
 Run:
 
@@ -202,13 +236,13 @@ uvx --from dbt-snowflake dbt build
 
 If the build succeeds, optionally verify the four target schemas are populated via `information_schema.tables`.
 
-### 8. Success response
+### 9. Success response
 
 On success, respond concisely:
 
 ```text
 Lab init is complete ✅
-The repo is on hol_branch, local changes/artifacts are cleared, Wizard lab permissions and skills are synced, dev schemas were reset, and the baseline dbt build passed.
+The repo is on hol_dft_branch, local changes/artifacts are cleared, Wizard lab permissions and skills are synced, dev schemas were reset, and the baseline dbt build passed.
 ```
 
 Do not show the lab Prompt 1. The user can trigger `$lab` when ready to start the workshop flow.

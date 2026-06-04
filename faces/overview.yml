@@ -1,0 +1,183 @@
+title: "Business Overview"
+description: "Executive overview of the dbt Wizard store: revenue, orders, customers, products, regions, and support."
+
+# Queries hit Snowflake via the lab's dbt profile (configured as `warehouse`
+# in dataface.yml). Use dbt ref() so tables resolve to each user's own marts
+# schema (e.g. dave_fowler_marts) — bare table names do NOT resolve.
+source: warehouse
+theme: cream
+
+variables:
+  date_range:
+    label: Date Range
+    input: daterange
+    default: ["2025-03-01", "2026-06-01"]
+
+queries:
+  kpis:
+    sql: |
+      SELECT
+        SUM(order_revenue_after_discount) AS total_revenue,
+        COUNT(*)                          AS total_orders,
+        AVG(total_amount)                 AS avg_order_value,
+        COUNT(DISTINCT customer_id)       AS buying_customers
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false
+        AND {{ filter_date_range('order_date', date_range) }}
+
+  monthly_revenue:
+    sql: |
+      SELECT order_month::date AS order_month, SUM(order_revenue_after_discount) AS net_revenue
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false
+        AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+        AND {{ filter_date_range('order_date', date_range) }}
+      GROUP BY 1 ORDER BY 1
+
+  orders_by_month:
+    sql: |
+      SELECT order_month::date AS order_month, COUNT(*) AS orders
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false
+        AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+        AND {{ filter_date_range('order_date', date_range) }}
+      GROUP BY 1 ORDER BY 1
+
+  revenue_by_category:
+    sql: |
+      SELECT category_name, SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter_date_range('order_date', date_range) }}
+      GROUP BY 1 ORDER BY revenue DESC
+
+  top_products:
+    sql: |
+      SELECT product_name, SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter_date_range('order_date', date_range) }}
+      GROUP BY 1 ORDER BY revenue DESC LIMIT 10
+
+  revenue_by_region:
+    sql: |
+      SELECT region, SUM(lifetime_revenue) AS revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY revenue DESC
+
+  revenue_by_customer_type:
+    sql: |
+      SELECT customer_type, SUM(lifetime_revenue) AS revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY revenue DESC
+
+  customer_tiers:
+    sql: |
+      SELECT customer_tier, COUNT(*) AS customers
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY customers DESC
+
+  tickets_by_priority:
+    sql: |
+      SELECT priority, COUNT(*) AS tickets
+      FROM {{ ref('fct_tickets') }}
+      GROUP BY 1 ORDER BY tickets DESC
+
+  tickets_by_issue:
+    sql: |
+      SELECT issue_type, COUNT(*) AS tickets
+      FROM {{ ref('fct_tickets') }}
+      GROUP BY 1 ORDER BY tickets DESC
+
+charts:
+  kpi_revenue:   { type: kpi, query: kpis, label: Total Revenue, value: total_revenue, format: "$,.0f" }
+  kpi_orders:    { type: kpi, query: kpis, label: Orders, value: total_orders, format: ",.0f" }
+  kpi_aov:       { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, format: "$,.2f" }
+  kpi_customers: { type: kpi, query: kpis, label: Buying Customers, value: buying_customers, format: ",.0f" }
+
+  revenue_trend:
+    title: Monthly Net Revenue
+    query: monthly_revenue
+    type: line
+    x: order_month
+    y: net_revenue
+    format: "$,.0f"
+    link: "/orders/"
+
+  orders_trend:
+    title: Orders by Month
+    query: orders_by_month
+    type: bar
+    x: order_month
+    y: orders
+    link: "/orders/"
+
+  category_mix:
+    title: Revenue by Category
+    query: revenue_by_category
+    type: donut
+    theta: revenue
+    color: category_name
+    link: "/products/?category_name={{ color }}"
+    total: { label: Total, format: "$,.0f" }
+
+  top_products_bar:
+    title: Top 10 Products by Revenue
+    query: top_products
+    type: bar
+    x: product_name
+    y: revenue
+    format: "$,.0f"
+    sort: { by: revenue, order: desc }
+    link: "/products/"
+
+  revenue_by_region_bar:
+    title: Lifetime Revenue by Region
+    query: revenue_by_region
+    type: bar
+    x: region
+    y: revenue
+    format: "$,.0f"
+    sort: { by: revenue, order: desc }
+    link: "/customers/?region={{ x }}"
+
+  customer_type_bar:
+    title: Revenue by Customer Type
+    query: revenue_by_customer_type
+    type: bar
+    x: customer_type
+    y: revenue
+    format: "$,.0f"
+    sort: { by: revenue, order: desc }
+    link: "/customers/?customer_type={{ x }}"
+
+  customer_tier_bar:
+    title: Customers by Tier
+    query: customer_tiers
+    type: bar
+    x: customer_tier
+    y: customers
+    link: "/customers/?customer_tier={{ x }}"
+
+  tickets_priority_bar:
+    title: Support Tickets by Priority
+    query: tickets_by_priority
+    type: bar
+    x: priority
+    y: tickets
+
+  tickets_issue_bar:
+    title: Support Tickets by Issue Type
+    query: tickets_by_issue
+    type: bar
+    x: issue_type
+    y: tickets
+    sort: { by: tickets, order: desc }
+
+rows:
+  - cols: [kpi_revenue, kpi_orders, kpi_aov, kpi_customers]
+  - cols: [revenue_trend, orders_trend]
+  - cols: [category_mix, top_products_bar]
+  - cols: [revenue_by_region_bar, customer_type_bar, customer_tier_bar]
+  - cols: [tickets_priority_bar, tickets_issue_bar]

@@ -1,0 +1,141 @@
+title: Customers
+description: Canonical customer list — filter, then click a row to open the customer detail.
+
+source: warehouse
+theme: cream
+
+# Variables double as the filter bar AND the link targets that other faces
+# drill into (e.g. overview → /customers/?region=West). filter() is null-safe,
+# so an unset variable shows everything.
+variables:
+  region:
+    label: Region
+    allow_null: true
+    placeholder: All regions
+    options:
+      query: region_options
+      column: region
+  customer_tier:
+    label: Tier
+    allow_null: true
+    placeholder: All tiers
+    options:
+      query: tier_options
+      column: customer_tier
+  customer_type:
+    label: Type
+    allow_null: true
+    placeholder: All types
+    options:
+      query: type_options
+      column: customer_type
+
+queries:
+  region_options:
+    sql: SELECT DISTINCT region FROM {{ ref('dim_customers') }} WHERE has_ever_ordered AND region IS NOT NULL ORDER BY 1
+  tier_options:
+    sql: SELECT DISTINCT customer_tier FROM {{ ref('dim_customers') }} WHERE has_ever_ordered ORDER BY 1
+  type_options:
+    sql: SELECT DISTINCT customer_type FROM {{ ref('dim_customers') }} WHERE has_ever_ordered ORDER BY 1
+
+  kpis:
+    sql: |
+      SELECT
+        COUNT(*)                  AS customers,
+        SUM(lifetime_revenue)     AS lifetime_revenue,
+        AVG(lifetime_revenue)     AS avg_ltv,
+        SUM(total_support_tickets) AS tickets
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+        AND {{ filter('region', region) }}
+        AND {{ filter('customer_tier', customer_tier) }}
+        AND {{ filter('customer_type', customer_type) }}
+
+  customer_rows:
+    sql: |
+      SELECT customer_id, full_name, region, customer_tier, customer_type,
+             total_orders, lifetime_revenue, total_support_tickets
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+        AND {{ filter('region', region) }}
+        AND {{ filter('customer_tier', customer_tier) }}
+        AND {{ filter('customer_type', customer_type) }}
+      ORDER BY lifetime_revenue DESC
+
+  by_tier:
+    sql: |
+      SELECT customer_tier, COUNT(*) AS customers, SUM(lifetime_revenue) AS lifetime_revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered AND {{ filter('region', region) }}
+      GROUP BY 1 ORDER BY lifetime_revenue DESC
+
+  by_region:
+    sql: |
+      SELECT region, COUNT(*) AS customers, SUM(lifetime_revenue) AS lifetime_revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered AND {{ filter('customer_tier', customer_tier) }}
+      GROUP BY 1 ORDER BY lifetime_revenue DESC
+
+  by_type:
+    sql: |
+      SELECT customer_type, COUNT(*) AS customers, SUM(lifetime_revenue) AS lifetime_revenue
+      FROM {{ ref('dim_customers') }}
+      WHERE has_ever_ordered
+      GROUP BY 1 ORDER BY lifetime_revenue DESC
+
+charts:
+  kpi_customers: { type: kpi, query: kpis, label: Customers, value: customers, format: ",.0f" }
+  kpi_revenue:   { type: kpi, query: kpis, label: Lifetime Revenue, value: lifetime_revenue, format: "$,.0f" }
+  kpi_avg_ltv:   { type: kpi, query: kpis, label: Avg Lifetime Value, value: avg_ltv, format: "$,.0f" }
+  kpi_tickets:   { type: kpi, query: kpis, label: Support Tickets, value: tickets, format: ",.0f" }
+
+  tier_bar:
+    title: Customers by Tier — click to filter
+    query: by_tier
+    type: bar
+    x: customer_tier
+    y: customers
+    link: "/customers/?customer_tier={{ x }}"
+
+  region_bar:
+    title: Lifetime Revenue by Region — click to filter
+    query: by_region
+    type: bar
+    x: region
+    y: lifetime_revenue
+    format: currency
+    sort: { by: lifetime_revenue, order: desc }
+    link: "/customers/?region={{ x }}"
+
+  type_bar:
+    title: Revenue by Customer Type — click to filter
+    query: by_type
+    type: bar
+    x: customer_type
+    y: lifetime_revenue
+    format: currency
+    sort: { by: lifetime_revenue, order: desc }
+    link: "/customers/?customer_type={{ x }}"
+
+  customer_table:
+    title: Customers — click a row for detail
+    query: customer_rows
+    type: table
+    link: "/customer/?customer_id={{ customer_id }}"
+    style:
+      columns:
+        full_name: { label: Customer }
+        region:
+          label: Region
+          link: "/customers/?region={{ region }}"
+        customer_tier:
+          label: Tier
+          link: "/customers/?customer_tier={{ customer_tier }}"
+        lifetime_revenue: { label: Lifetime Revenue, format: currency }
+        total_orders: { label: Orders, format: integer }
+        total_support_tickets: { label: Tickets, format: integer }
+
+rows:
+  - cols: [kpi_customers, kpi_revenue, kpi_avg_ltv, kpi_tickets]
+  - cols: [tier_bar, region_bar, type_bar]
+  - customer_table

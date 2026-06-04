@@ -13,7 +13,7 @@ description: >
 
 **The setup:** It's your first week at The Builders Depot. You've been handed access to the dbt repo with a vague mandate: *"get familiar and ship something small by Friday."* Shortly after, the Director of Operations stops by with a follow-up ask: they want to know which orders have been generating the most support burden.
 
-This lab runs in two sections. The first three prompts orient you to the project and get a small first contribution shipped. The last two prompts extend an existing model with a new data source — without breaking anything downstream.
+This lab runs in three sections. The first three prompts orient you to the project and get a small first contribution shipped. The next two extend an existing model with a new data source — without breaking anything downstream. A final prompt turns the work into a live, interactive dashboard with **dbt Charts (Dataface)** — no BI tool, just YAML over the same dbt models.
 
 ---
 
@@ -173,13 +173,37 @@ Confirm all four of these before reporting success:
 
 If anything fails, diagnose with dbt Wizard before suggesting materialization.
 
-After responding (assuming all checks pass), include the optional prompt in the same response so attendees have a clear final action, even if Wizard renders an automatic card below it:
+After responding (assuming all checks pass), hand off to the dashboard finale with the standard next-prompt callout in the same response, even if Wizard renders an automatic card below it:
 
 ---
-**⬇ LAB COMPLETE — optional bonus if you have time:**
+**🟩 ⬇ YOUR NEXT PROMPT:** copy this as written, or type something similar in your own words:
 
 ```
-Materialize int_orders_enriched into my dev schema. Skip the extended verification — the preview and downstream compile already confirmed the output.
+Make me a dashboard of orders by week and serve it.
+```
+---
+
+(Optional, if time allows before the dashboard: ask Wizard to *"Materialize int_orders_enriched into my dev schema"* — the preview and downstream compile already confirmed the output.)
+
+---
+
+## Prompt 6 — Visualize it with dbt Charts (Dataface)
+
+Exercises **dbt Charts (Dataface, `dft`)** end to end: the Wizard authors a `faces/*.yml`, wires queries to the marts via `{{ ref() }}` (so it resolves to the attendee's own schema), validates, then runs `dft serve` to open the dashboard live in the browser — over the same Snowflake data the lab just built.
+
+Keep this as the single combined **build-and-serve** request above; do not split it into separate steps. This visualizes the very thing the attendee modeled back in Prompt 3 (`orders_by_week`). Have Wizard name the new face `weekly_orders` (so it doesn't collide with the `orders` entity face or the `orders_by_week` model).
+
+Build the weekly rollup **directly from `{{ ref('fct_orders') }}`** — do not require `orders_by_week` to be materialized (Prompt 3 only compiled it). Mirror that model's grain and measures: `order_week` (date-truncated to week and cast to `::date` so the axis renders clean month/week labels, not raw `00:00:00` timestamps), `order_count`, `gross_revenue`, and `distinct_customers`. Drop the current partial week so the trend doesn't dip at the right edge.
+
+The deliverable: a served `faces/weekly_orders.yml` with KPI tiles (total orders, gross revenue, distinct customers) and a weekly trend (order volume + revenue) over `order_week`, opened in the browser via `dft serve`. After it serves, name the payoff in one sentence: the weekly model they shipped earlier in the lab is now a live, interactive dashboard — defined in version-controlled YAML, with zero BI-tool setup.
+
+If the attendee has time, point out that the repo already ships linked dashboards (`overview`, `customers`, `products`, `orders`) whose charts **drill through** to canonical list and detail views — e.g. click a region on the overview to land on a filtered customer list, then click a customer to see their orders and support tickets. Offer the optional capstone:
+
+---
+**⬇ LAB COMPLETE — optional, if you have time:**
+
+```
+Open the overview dashboard with dft and walk me through how clicking a chart drills through to the customer and order detail views.
 ```
 ---
 
@@ -189,12 +213,13 @@ Materialize int_orders_enriched into my dev schema. Skip the extended verificati
 
 - `models/marts/core/orders_by_week.sql` — mart model aggregating `fct_orders` to the week grain. Compiled and previewed. **Not materialized.**
 - `int_orders_enriched` — updated to emit `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status`. Existing column contract preserved. Downstream models compile. Row count unchanged.
+- `faces/weekly_orders.yml` — a dbt Charts (Dataface) dashboard of orders by week (the same rollup as the `orders_by_week` model from Prompt 3), built on `fct_orders` via `ref()` and served live in the browser. (Cleared on reset, since it's attendee-created.)
 
 ---
 
 ## Lab cleanup
 
-After Prompt 5, or after the optional materialization step, use `$lab_init` to reset the repo and Snowflake dev schemas for the next attendee.
+After Prompt 6 (or the optional drill-through capstone), use `$lab_init` to reset the repo and Snowflake dev schemas for the next attendee. `$lab_init` also clears any attendee-created faces (like `weekly_orders.yml`) while keeping the committed dashboards.
 
 ---
 

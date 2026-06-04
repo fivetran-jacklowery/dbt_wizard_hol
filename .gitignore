@@ -11,3 +11,7 @@ profiles.yml
 dbt_internal_packages/
 
 .dbt/
+renders/
+.venv/
+__pycache__/
+*.duckdb

@@ -1,0 +1,103 @@
+title: Products
+description: Canonical product list (built from real order-item sales) — click a row for detail.
+
+source: warehouse
+theme: cream
+
+# Built from fct_order_items, not dim_products: the dim_products sales rollups
+# (total_units_sold / total_revenue) are empty in this project.
+variables:
+  category_name:
+    label: Category
+    allow_null: true
+    placeholder: All categories
+    options:
+      query: category_options
+      column: category_name
+
+queries:
+  category_options:
+    sql: SELECT DISTINCT category_name FROM {{ ref('fct_order_items') }} ORDER BY 1
+
+  kpis:
+    sql: |
+      SELECT
+        SUM(line_revenue_after_discount) AS revenue,
+        SUM(quantity)                    AS units,
+        COUNT(DISTINCT order_id)         AS orders,
+        COUNT(DISTINCT product_id)       AS products
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('category_name', category_name) }}
+
+  product_rows:
+    sql: |
+      SELECT product_id,
+             ANY_VALUE(product_name)  AS product_name,
+             ANY_VALUE(category_name) AS category_name,
+             SUM(quantity)            AS units_sold,
+             SUM(line_revenue_after_discount) AS revenue,
+             COUNT(DISTINCT order_id) AS orders
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('category_name', category_name) }}
+      GROUP BY product_id
+      ORDER BY revenue DESC
+
+  by_category:
+    sql: |
+      SELECT category_name,
+             SUM(line_revenue_after_discount) AS revenue,
+             SUM(quantity) AS units
+      FROM {{ ref('fct_order_items') }}
+      GROUP BY 1 ORDER BY revenue DESC
+
+  by_brand:
+    sql: |
+      SELECT brand, SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter('category_name', category_name) }}
+      GROUP BY 1 ORDER BY revenue DESC
+
+charts:
+  kpi_revenue:  { type: kpi, query: kpis, label: Revenue, value: revenue, format: "$,.0f" }
+  kpi_units:    { type: kpi, query: kpis, label: Units Sold, value: units, format: ",.0f" }
+  kpi_orders:   { type: kpi, query: kpis, label: Orders, value: orders, format: ",.0f" }
+  kpi_products: { type: kpi, query: kpis, label: Products Sold, value: products, format: ",.0f" }
+
+  category_bar:
+    title: Revenue by Category — click to filter
+    query: by_category
+    type: bar
+    x: category_name
+    y: revenue
+    format: currency
+    sort: { by: revenue, order: desc }
+    link: "/products/?category_name={{ x }}"
+
+  brand_bar:
+    title: Revenue by Brand
+    query: by_brand
+    type: bar
+    x: brand
+    y: revenue
+    format: currency
+    sort: { by: revenue, order: desc }
+
+  product_table:
+    title: Products — click a row for detail
+    query: product_rows
+    type: table
+    link: "/product/?product_id={{ product_id }}"
+    style:
+      columns:
+        product_name: { label: Product }
+        category_name:
+          label: Category
+          link: "/products/?category_name={{ category_name }}"
+        revenue: { label: Revenue, format: currency }
+        units_sold: { label: Units, format: integer }
+        orders: { label: Orders, format: integer }
+
+rows:
+  - cols: [kpi_revenue, kpi_units, kpi_orders, kpi_products]
+  - cols: [category_bar, brand_bar]
+  - product_table
