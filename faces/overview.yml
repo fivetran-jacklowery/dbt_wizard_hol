@@ -7,6 +7,12 @@ description: "Executive overview of the dbt Wizard store: revenue, orders, custo
 source: warehouse
 theme: cream
 
+variables:
+  date_range:
+    label: Date Range
+    input: daterange
+    default: ["2025-03-01", "2026-06-01"]
+
 queries:
   kpis:
     sql: |
@@ -17,33 +23,38 @@ queries:
         COUNT(DISTINCT customer_id)       AS buying_customers
       FROM {{ ref('fct_orders') }}
       WHERE is_cancelled = false
+        AND {{ filter_date_range('order_date', date_range) }}
 
   monthly_revenue:
     sql: |
-      SELECT order_month, SUM(order_revenue_after_discount) AS net_revenue
+      SELECT order_month::date AS order_month, SUM(order_revenue_after_discount) AS net_revenue
       FROM {{ ref('fct_orders') }}
       WHERE is_cancelled = false
         AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+        AND {{ filter_date_range('order_date', date_range) }}
       GROUP BY 1 ORDER BY 1
 
   orders_by_month:
     sql: |
-      SELECT order_month, COUNT(*) AS orders
+      SELECT order_month::date AS order_month, COUNT(*) AS orders
       FROM {{ ref('fct_orders') }}
       WHERE is_cancelled = false
         AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+        AND {{ filter_date_range('order_date', date_range) }}
       GROUP BY 1 ORDER BY 1
 
   revenue_by_category:
     sql: |
       SELECT category_name, SUM(line_revenue_after_discount) AS revenue
       FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter_date_range('order_date', date_range) }}
       GROUP BY 1 ORDER BY revenue DESC
 
   top_products:
     sql: |
       SELECT product_name, SUM(line_revenue_after_discount) AS revenue
       FROM {{ ref('fct_order_items') }}
+      WHERE {{ filter_date_range('order_date', date_range) }}
       GROUP BY 1 ORDER BY revenue DESC LIMIT 10
 
   revenue_by_region:

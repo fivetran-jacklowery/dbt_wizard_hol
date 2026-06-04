@@ -9,9 +9,16 @@ theme: cream
 variables:
   category_name:
     label: Category
-    input: text
+    allow_null: true
+    placeholder: All categories
+    options:
+      query: category_options
+      column: category_name
 
 queries:
+  category_options:
+    sql: SELECT DISTINCT category_name FROM {{ ref('fct_order_items') }} ORDER BY 1
+
   kpis:
     sql: |
       SELECT

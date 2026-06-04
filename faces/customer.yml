@@ -21,7 +21,7 @@ queries:
 
   monthly_spend:
     sql: |
-      SELECT order_month, SUM(order_revenue_after_discount) AS spend
+      SELECT order_month::date AS order_month, SUM(order_revenue_after_discount) AS spend
       FROM {{ ref('fct_orders') }}
       WHERE {{ filter('customer_id', customer_id) }}
       GROUP BY 1 ORDER BY 1

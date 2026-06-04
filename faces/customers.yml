@@ -10,15 +10,34 @@ theme: cream
 variables:
   region:
     label: Region
-    input: text
+    allow_null: true
+    placeholder: All regions
+    options:
+      query: region_options
+      column: region
   customer_tier:
     label: Tier
-    input: text
+    allow_null: true
+    placeholder: All tiers
+    options:
+      query: tier_options
+      column: customer_tier
   customer_type:
     label: Type
-    input: text
+    allow_null: true
+    placeholder: All types
+    options:
+      query: type_options
+      column: customer_type
 
 queries:
+  region_options:
+    sql: SELECT DISTINCT region FROM {{ ref('dim_customers') }} WHERE has_ever_ordered AND region IS NOT NULL ORDER BY 1
+  tier_options:
+    sql: SELECT DISTINCT customer_tier FROM {{ ref('dim_customers') }} WHERE has_ever_ordered ORDER BY 1
+  type_options:
+    sql: SELECT DISTINCT customer_type FROM {{ ref('dim_customers') }} WHERE has_ever_ordered ORDER BY 1
+
   kpis:
     sql: |
       SELECT

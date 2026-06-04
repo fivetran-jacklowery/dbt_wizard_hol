@@ -24,7 +24,7 @@ queries:
 
   monthly_sales:
     sql: |
-      SELECT order_month,
+      SELECT order_month::date AS order_month,
              SUM(line_revenue_after_discount) AS revenue,
              SUM(quantity) AS units
       FROM {{ ref('fct_order_items') }}

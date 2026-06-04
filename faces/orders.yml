@@ -7,15 +7,28 @@ theme: cream
 variables:
   order_status:
     label: Status
-    input: text
+    allow_null: true
+    placeholder: All statuses
+    options:
+      query: status_options
+      column: order_status
   shipping_state:
     label: State
-    input: text
+    allow_null: true
+    placeholder: All states
+    options:
+      query: state_options
+      column: shipping_state
   customer_id:
     label: Customer ID
     input: text
 
 queries:
+  status_options:
+    sql: SELECT DISTINCT order_status FROM {{ ref('fct_orders') }} ORDER BY 1
+  state_options:
+    sql: SELECT DISTINCT shipping_state FROM {{ ref('fct_orders') }} WHERE shipping_state IS NOT NULL ORDER BY 1
+
   kpis:
     sql: |
       SELECT
@@ -48,7 +61,7 @@ queries:
 
   by_month:
     sql: |
-      SELECT order_month, COUNT(*) AS orders
+      SELECT order_month::date AS order_month, COUNT(*) AS orders
       FROM {{ ref('fct_orders') }}
       WHERE order_month < DATE_TRUNC('month', CURRENT_DATE)
         AND {{ filter('shipping_state', shipping_state) }}
