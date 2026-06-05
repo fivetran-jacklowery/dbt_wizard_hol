@@ -215,16 +215,29 @@ Use the active `catalog` and `schema` from the connection block. The schema is t
 
 ### 7. Drop only dbt-managed dev schemas
 
-Using the warehouse mutation tool, drop these four schemas in the active catalog, replacing `<catalog>` and `<target>` from dbt debug:
+Use the checked-in `lab_init_drop_dev_schemas` dbt macro. It derives the active
+catalog/database and schema from the dbt target, refuses raw/source schemas, and
+drops only these generated schemas:
 
-```sql
-drop schema if exists <catalog>.<target>_staging cascade;
-drop schema if exists <catalog>.<target>_intermediate cascade;
-drop schema if exists <catalog>.<target>_marts cascade;
-drop schema if exists <catalog>.<target>_marketing cascade;
+```text
+<target>_staging
+<target>_intermediate
+<target>_marts
+<target>_marketing
 ```
 
-Run each statement separately if the tool does not allow multi-statement execution.
+Run:
+
+```bash
+dbt run-operation lab_init_drop_dev_schemas
+```
+
+If the active target cannot infer the catalog/database, pass the values from
+`dbt debug` explicitly:
+
+```bash
+dbt run-operation lab_init_drop_dev_schemas --args '{"catalog_name":"<catalog>","target_schema":"<target>"}'
+```
 
 ### 8. Rebuild the baseline project
 
