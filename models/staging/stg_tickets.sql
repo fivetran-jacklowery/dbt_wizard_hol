@@ -18,7 +18,7 @@ renamed as (
         resolved_at,
         case
             when resolved_at is not null
-            then datediff('hour', created_at, resolved_at)
+            then timestampdiff(HOUR, created_at, resolved_at)
         end                                                      as resolution_hours,
         _fivetran_deleted                                        as is_deleted,
         _fivetran_synced                                         as fivetran_synced_at

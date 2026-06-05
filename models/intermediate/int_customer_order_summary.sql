@@ -35,7 +35,7 @@ customer_orders as (
         count(distinct o.order_id)                              as total_orders,
         min(o.order_date)                                       as first_order_date,
         max(o.order_date)                                       as last_order_date,
-        datediff('day', min(o.order_date), max(o.order_date))   as customer_tenure_days,
+        timestampdiff(DAY, min(o.order_date), max(o.order_date)) as customer_tenure_days,
 
         sum(ot.order_revenue)                                   as lifetime_revenue,
         sum(ot.order_revenue_after_discount)                    as lifetime_revenue_after_discount,

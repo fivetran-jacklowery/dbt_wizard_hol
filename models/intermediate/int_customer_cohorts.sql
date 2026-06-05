@@ -34,11 +34,11 @@ cohorts as (
         date_trunc('month', cos.first_order_date)               as cohort_month,
 
         -- Days from account creation to first purchase
-        datediff('day', c.created_at, cos.first_order_date)     as days_to_first_order,
+        timestampdiff(DAY, c.created_at, cos.first_order_date) as days_to_first_order,
 
         -- Active in last N days (driven by project variable)
         case
-            when datediff('day', cos.last_order_date, current_date) <= {{ var('active_customer_days') }}
+            when timestampdiff(DAY, cos.last_order_date, current_date) <= {{ var('active_customer_days') }}
             then true else false
         end                                                     as is_active_customer
 

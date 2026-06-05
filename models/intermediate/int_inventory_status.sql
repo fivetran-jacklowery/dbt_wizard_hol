@@ -49,7 +49,7 @@ joined as (
         end                                                     as needs_reorder,
 
         -- Days since last restock
-        datediff('day', i.last_restocked_at, current_date)     as days_since_restock
+        timestampdiff(DAY, i.last_restocked_at, current_date)  as days_since_restock
 
     from inventory i
     left join products p

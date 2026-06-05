@@ -70,7 +70,7 @@ final as (
         {{ classify_customer_tier('coalesce(cos.lifetime_revenue, 0)') }} as customer_tier,
         case when cos.customer_id is null then false else true end as has_ever_ordered,
         case
-            when datediff('day', cos.last_order_date, current_date) <= {{ var('active_customer_days') }}
+            when timestampdiff(DAY, cos.last_order_date, current_date) <= {{ var('active_customer_days') }}
             then true else false
         end                                                    as is_active
 
