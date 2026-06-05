@@ -14,12 +14,12 @@
 #   # dbt target override (defaults to DBT_TARGET env var, then profile default)
 #   # target: dev
 
-# Default data source — reuse the lab's dbt profile (Snowflake key-pair auth).
+# Default data source — reuse the lab's active dbt profile.
 # Queries with no explicit `source:` resolve to this; tables resolve in the
-# profile's database/schema (snowflake_summit_2026_hol_db.dave_fowler).
+# profile's configured Unity Catalog catalog/schema.
 default_source: warehouse
 sources:
   warehouse:
     type: dbt_profile
-    profile: dbt_hands_on_lab_aws
+    profile: hol_dbx_profile
     target: dev

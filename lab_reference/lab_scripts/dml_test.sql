@@ -16,8 +16,8 @@
 --   C — Customer Segmentation (VIP, Big Spender, Category-Loyal)
 -- =============================================================================
 
-USE DATABASE SNOWFLAKE_SUMMIT_2026_HOL_DB;
-USE SCHEMA TEST_DBT_WIZ_HOL_SCHEMA_RELOAD;
+USE CATALOG hol_dbx_catalog;
+USE SCHEMA test_dbt_wiz_hol_schema_reload;
 
 -- #############################################################################
 -- Section 1: RET_WAREHOUSES (5 rows)

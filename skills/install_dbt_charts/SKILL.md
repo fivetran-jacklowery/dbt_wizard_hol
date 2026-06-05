@@ -56,10 +56,10 @@ Install into a Python environment that the `dft` command will run from. To keep
 it isolated and aligned with the lab layout, use a 3.13 venv:
 
 ```bash
-mkdir -p ~/snowsummit2026
+mkdir -p ~/dataaisummit2026
 # (Re)create the venv on 3.13 if it isn't already
-python3.13 -m venv ~/snowsummit2026/dft_venv
-source ~/snowsummit2026/dft_venv/bin/activate
+python3.13 -m venv ~/dataaisummit2026/dft_venv
+source ~/dataaisummit2026/dft_venv/bin/activate
 pip install --upgrade pip
 pip install "dataface[snowflake]"
 ```
@@ -76,7 +76,7 @@ the binary into `~/.local/bin`, which `hol_setup.sh` already guarantees is on PA
 
 ```bash
 mkdir -p ~/.local/bin
-ln -sf ~/snowsummit2026/dft_venv/bin/dft ~/.local/bin/dft
+ln -sf ~/dataaisummit2026/dft_venv/bin/dft ~/.local/bin/dft
 ```
 
 Now `dft` resolves in any new terminal — no venv activation needed.
@@ -173,8 +173,8 @@ On success, report:
 
 - **`dft: command not found`** — the PATH symlink from Step 2b is missing or
   `~/.local/bin` isn't on PATH. Re-run
-  `ln -sf ~/snowsummit2026/dft_venv/bin/dft ~/.local/bin/dft` and open a new
-  terminal. (Falling back, `source ~/snowsummit2026/dft_venv/bin/activate` also
+  `ln -sf ~/dataaisummit2026/dft_venv/bin/dft ~/.local/bin/dft` and open a new
+  terminal. (Falling back, `source ~/dataaisummit2026/dft_venv/bin/activate` also
   works.)
 - **`dft init` prompts despite flags** — you're on an older dataface; upgrade with
   `pip install -U "dataface[snowflake]"` and re-run, or add `--yes` (note `--yes`

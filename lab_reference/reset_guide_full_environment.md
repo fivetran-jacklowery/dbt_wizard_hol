@@ -14,10 +14,10 @@ This guide must remain independent of the project's current model set. Do not ad
 The primary raw source schema for this project is:
 
 ```text
-SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL
+hol_dbx_catalog.hol_2026_retail
 ```
 
-Never drop this schema in an agent/user reset flow, even if the user has permission. Full environment resets may recreate the tables inside this schema by running the approved `ddl.sql` and `dml.sql` scripts, but the reset instructions must not include `DROP SCHEMA` for `SF_HOL_2026_RETAIL`.
+Never drop this schema in an agent/user reset flow, even if the user has permission. Full environment resets may recreate the tables inside this schema by running the approved `ddl.sql` and `dml.sql` scripts, but the reset instructions must not include `DROP SCHEMA` for `hol_2026_retail`.
 
 ## What this resets
 
@@ -29,8 +29,8 @@ Never drop this schema in an agent/user reset flow, even if the user has permiss
 ## Assumptions
 
 - Repository branch: `main`
-- Source database: `SNOWFLAKE_SUMMIT_2026_HOL_DB`
-- Raw source schema: `SF_HOL_2026_RETAIL`
+- Source database: `hol_dbx_catalog`
+- Raw source schema: `hol_2026_retail`
 - dbt schemas are generated with this pattern:
 
 ```text
@@ -107,7 +107,7 @@ Then run the DML script:
 These scripts reset and repopulate:
 
 ```text
-SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL
+hol_dbx_catalog.hol_2026_retail
 ```
 
 `ddl.sql` recreates the source tables with `CREATE OR REPLACE TABLE`.
@@ -121,29 +121,29 @@ This step intentionally drops schemas by dbt schema convention, not by model nam
 Replace `<target_schema>` with the lab user's dbt target schema prefix.
 
 ```sql
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_staging cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_intermediate cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_marts cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_marketing cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_staging cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_intermediate cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_marts cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_marketing cascade;
 ```
 
 Example for target schema `JI`:
 
 ```sql
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_staging cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_intermediate cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_marts cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_marketing cascade;
+drop schema if exists hol_dbx_catalog.JI_staging cascade;
+drop schema if exists hol_dbx_catalog.JI_intermediate cascade;
+drop schema if exists hol_dbx_catalog.JI_marts cascade;
+drop schema if exists hol_dbx_catalog.JI_marketing cascade;
 ```
 
-Only drop schemas that belong to the lab user being reset. Never drop `SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL`.
+Only drop schemas that belong to the lab user being reset. Never drop `hol_dbx_catalog.hol_2026_retail`.
 
 ## 4. Rebuild clean dbt baseline
 
 From the project root:
 
 ```bash
-uvx --from dbt-snowflake dbt build
+dbt build
 ```
 
 This rebuilds the project from clean `main` using the current dbt target.
@@ -165,13 +165,13 @@ nothing to commit, working tree clean
 Optional compile smoke test:
 
 ```bash
-uvx --from dbt-snowflake dbt compile
+dbt compile
 ```
 
 Optional model list check:
 
 ```bash
-uvx --from dbt-snowflake dbt ls --resource-type model
+dbt ls --resource-type model
 ```
 
 ## Expected final state

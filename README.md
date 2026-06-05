@@ -77,7 +77,7 @@ Helpful references live under `lab_reference/`:
 The protected raw source schema is:
 
 ```text
-SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL
+hol_dbx_catalog.hol_2026_retail
 ```
 
 Do **not** drop this schema during normal lab resets. Use the reset guides in `lab_reference/` so we only remove the current attendee's dbt-created schemas and preserve shared source data.

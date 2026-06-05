@@ -1,8 +1,9 @@
 #!/bin/bash
 # dbt Wizard Hands-On Lab — MacBook Setup Script
 # Prerequisites (done by instructor before running):
-#   - ~/.ssh/rsa_key.p8 : RSA private key, already registered in Snowflake
 #   - ~/.ssh/id_ed25519 : SSH deploy key, already added to GitHub repo
+#   - Databricks OAuth service-principal env vars set:
+#       DATABRICKS_HOST, DATABRICKS_HTTP_PATH, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
 #   - Xcode CLT         : run 'xcode-select --install' and click Install
 
 set -euo pipefail
@@ -23,30 +24,29 @@ NUM=$(echo "$USERNAME" | grep -o '[0-9]*')
 
 [[ -n "$NUM" ]] || fail "Could not determine lab number from username '$USERNAME'. Expected format: demo1, demo2, etc."
 
-PASSPHRASE="labuser${NUM}"
 SCHEMA="lab_user_${NUM}_dev"
-PRIVATE_KEY_PATH="/Users/${USERNAME}/.ssh/rsa_key.p8"
-LAB_DIR="$HOME/snowsummit2026"
+LAB_DIR="$HOME/dataaisummit2026"
 PROJECT_DIR="$LAB_DIR/dbt_wizard_hol"
 VENV_DIR="$LAB_DIR/venv"
 
 echo ""
 info "Detected user: $USERNAME (lab number: $NUM)"
 info "Schema:        $SCHEMA"
-info "Key path:      $PRIVATE_KEY_PATH"
 info "Lab folder:    $LAB_DIR"
 
 # ─── Verify required files are present ────────────────────────────────────────
 echo ""
 info "Checking required files..."
 
-[[ -f "$PRIVATE_KEY_PATH" ]] || fail "Missing: $PRIVATE_KEY_PATH"
 [[ -f ~/.ssh/id_ed25519 ]]   || fail "Missing: ~/.ssh/id_ed25519"
+[[ -n "${DATABRICKS_HOST:-}" ]] || fail "Missing env var: DATABRICKS_HOST"
+[[ -n "${DATABRICKS_HTTP_PATH:-}" ]] || fail "Missing env var: DATABRICKS_HTTP_PATH"
+[[ -n "${DATABRICKS_CLIENT_ID:-}" ]] || fail "Missing env var: DATABRICKS_CLIENT_ID"
+[[ -n "${DATABRICKS_CLIENT_SECRET:-}" ]] || fail "Missing env var: DATABRICKS_CLIENT_SECRET"
 
-chmod 600 "$PRIVATE_KEY_PATH"
 chmod 600 ~/.ssh/id_ed25519
 
-ok "Keys present and permissions set"
+ok "Git key and Databricks OAuth env vars present"
 
 # ─── 1. Xcode Command Line Tools ──────────────────────────────────────────────
 # PREWORK: xcode-select --install (click Install when prompted, wait to complete)
@@ -163,7 +163,7 @@ info "Writing dbt Wizard project-scoped lab config..."
 mkdir -p "$PROJECT_DIR/.dbt/wizard"
 
 cat > "$PROJECT_DIR/.dbt/wizard/config.toml" << TOML
-# Snowflake Summit HOL lab repo is pre-approved so attendees do not have to
+# Data + AI Summit HOL lab repo is pre-approved so attendees do not have to
 # approve every command during the timed workshop.
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
@@ -179,19 +179,20 @@ info "Writing dbt profiles.yml..."
 mkdir -p ~/.dbt
 
 cat > ~/.dbt/profiles.yml << YAML
-dbt_hands_on_lab_aws:
+hol_dbx_profile:
   outputs:
     dev:
-      account: GQ81837-SALES_ENG_TESTING_AWS
-      database: snowflake_summit_2026_hol_db
-      private_key_passphrase: ${PASSPHRASE}
-      private_key_path: ${PRIVATE_KEY_PATH}
-      role: lab_user_role
+      auth_type: oauth
+      catalog: hol_dbx_catalog
+      client_id: ${DATABRICKS_CLIENT_ID}
+      client_secret: ${DATABRICKS_CLIENT_SECRET}
+      connect_retries: 3
+      dbt_databricks_verify_ssl: false
+      host: ${DATABRICKS_HOST}
+      http_path: ${DATABRICKS_HTTP_PATH}
       schema: ${SCHEMA}
       threads: 4
-      type: snowflake
-      user: lab_user_${NUM}
-      warehouse: default
+      type: databricks
   target: dev
 YAML
 
@@ -222,5 +223,4 @@ echo "  Lab folder:  $LAB_DIR"
 echo "  Project:     $PROJECT_DIR"
 echo "  Venv:        $VENV_DIR"
 echo "  Profile:     ~/.dbt/profiles.yml"
-echo "  RSA key:     $PRIVATE_KEY_PATH"
 echo ""

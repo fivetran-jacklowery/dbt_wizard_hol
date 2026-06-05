@@ -3,11 +3,11 @@ version: 2
 sources:
   - name: retail
     description: >
-      Fivetran-synced retail data from SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL.
+      Fivetran-style retail demo data from hol_dbx_catalog.hol_2026_retail.
       All tables include _FIVETRAN_DELETED and _FIVETRAN_SYNCED system columns.
       The physical primary key is CTID_FIVETRAN_ID; the business key is ID on every table.
-    database: SNOWFLAKE_SUMMIT_2026_HOL_DB
-    schema: SF_HOL_2026_RETAIL
+    database: hol_dbx_catalog
+    schema: hol_2026_retail
 
     tables:
       - name: RET_CUSTOMERS

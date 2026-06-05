@@ -3,7 +3,7 @@ name: lab_init
 description: >
   Reset and prepare the dbt Wizard hands-on lab repo before or after a lab run.
   Use when the user asks to initialize, reset, clean up, prepare the HOL repo,
-  clear Snowflake/dev schemas, restore hol_dft_branch, remove local changes, clear
+  clear Databricks/dev schemas, restore hol_dft_branch, remove local changes, clear
   dbt artifacts, or verify the local lab skills setup.
 ---
 
@@ -14,7 +14,7 @@ This skill is the all-in-one initializer/cleanup for the hands-on lab repo. It i
 ## Safety contract
 
 - Only operate inside the current repo.
-- Never drop `SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL` or any raw/source schema.
+- Never drop `hol_dbx_catalog.hol_2026_retail` or any raw/source schema.
 - Only drop schemas derived from the active dbt target schema prefix:
   - `<target>_staging`
   - `<target>_intermediate`
@@ -175,7 +175,7 @@ Configure Wizard for this repo so attendees do not have to approve every command
 ```bash
 mkdir -p .dbt/wizard
 cat > .dbt/wizard/config.toml << TOML
-# Snowflake Summit HOL lab repo is pre-approved so attendees do not have to
+# Data + AI Summit HOL lab repo is pre-approved so attendees do not have to
 # approve every command during the timed workshop.
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
@@ -189,7 +189,7 @@ The lab now includes a Dataface ("dbt Charts") section, so `dft` must be present
 Check for it:
 
 ```bash
-~/snowsummit2026/dft_venv/bin/dft --version 2>/dev/null \
+~/dataaisummit2026/dft_venv/bin/dft --version 2>/dev/null \
   || dft --version 2>/dev/null \
   || echo "dft missing"
 ```
@@ -208,20 +208,20 @@ already cleared any attendee-created dashboards.
 Run:
 
 ```bash
-uvx --from dbt-snowflake dbt debug
+dbt debug
 ```
 
-Use the active `database` and `schema` from the connection block. The schema is the target prefix used for cleanup.
+Use the active `catalog` and `schema` from the connection block. The schema is the target prefix used for cleanup.
 
 ### 7. Drop only dbt-managed dev schemas
 
-Using the warehouse mutation tool, drop these four schemas in the active database, replacing `<database>` and `<target>` from dbt debug:
+Using the warehouse mutation tool, drop these four schemas in the active catalog, replacing `<catalog>` and `<target>` from dbt debug:
 
 ```sql
-drop schema if exists <database>.<target>_staging cascade;
-drop schema if exists <database>.<target>_intermediate cascade;
-drop schema if exists <database>.<target>_marts cascade;
-drop schema if exists <database>.<target>_marketing cascade;
+drop schema if exists <catalog>.<target>_staging cascade;
+drop schema if exists <catalog>.<target>_intermediate cascade;
+drop schema if exists <catalog>.<target>_marts cascade;
+drop schema if exists <catalog>.<target>_marketing cascade;
 ```
 
 Run each statement separately if the tool does not allow multi-statement execution.
@@ -231,7 +231,7 @@ Run each statement separately if the tool does not allow multi-statement executi
 Run:
 
 ```bash
-uvx --from dbt-snowflake dbt build
+dbt build
 ```
 
 If the build succeeds, optionally verify the four target schemas are populated via `information_schema.tables`.

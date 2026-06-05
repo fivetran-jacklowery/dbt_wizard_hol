@@ -73,7 +73,7 @@ retail.RET\_PRODUCTS.brand was renamed brand\_name overnight. stg\_products is b
 
 | Step | User Prompt | What It Demonstrates | dbt Wizard Functionality |
 | :---- | :---- | :---- | :---- |
-| 0 | (Run in the terminal, not in Wizard, `cd /Users/youraccount/snowsummit2026/dbt_wizard_hol`And then Run `dbt run --select stg_products+` | Reproduces the failure live so the rest of the workflow is grounded in a real error message, not a hypothetical. | terminal — dbt run |
+| 0 | (Run in the terminal, not in Wizard, `cd /Users/youraccount/dataaisummit2026/dbt_wizard_hol`And then Run `dbt run --select stg_products+` | Reproduces the failure live so the rest of the workflow is grounded in a real error message, not a hypothetical. | terminal — dbt run |
 | 1 | My dbt run just failed. Read the most recent run results and tell me which model failed, what the error was, and which upstream source or column the error references. | Reads run-results, parses the error, and names stg\_products and the missing column brand — no scrolling stack traces. | status, dbt\_show, error parsing |
 | 2 | Describe the current schema of retail.RET\_PRODUCTS. List every column that exists today. | Pulls the live column list from Snowflake and converts "something changed" into "brand was renamed brand\_name." | describe, warehouse |
 | 3 | Show me every model, source definition, and test in this project that references the product column brand. I need a complete blast-radius list before I change anything. | Maps the full product blast radius — stg\_products and downstream intermediates and marts. This is a risk check, not a request to edit every downstream file. | search, lineage, impact analysis |

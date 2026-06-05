@@ -14,7 +14,7 @@ This guide must remain independent of the project's current model set. Do not ad
 The primary raw source schema for this project is:
 
 ```text
-SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL
+hol_dbx_catalog.hol_2026_retail
 ```
 
 Never drop this schema in an agent/user reset flow, even if the user has permission. The single-user reset only removes dbt-created schemas for the current lab user's target schema prefix.
@@ -35,7 +35,7 @@ Use this every time a new lab starts, for example every 20 minutes, when you nee
 
 ## What this does not reset
 
-- Shared raw source schema: `SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL`
+- Shared raw source schema: `hol_dbx_catalog.hol_2026_retail`
 - Shared lab scripts
 - Remote git branches
 - Other users' dbt schemas
@@ -89,7 +89,7 @@ The project uses `generate_schema_name`, so dbt creates schemas using this patte
 Find the current target schema from the user's dbt profile or by running:
 
 ```bash
-uvx --from dbt-snowflake dbt debug
+dbt debug
 ```
 
 Look for the active target/schema in the output.
@@ -101,29 +101,29 @@ This step intentionally drops schemas by dbt schema convention, not by model nam
 Replace `<target_schema>` with the lab user's target schema prefix.
 
 ```sql
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_staging cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_intermediate cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_marts cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.<target_schema>_marketing cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_staging cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_intermediate cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_marts cascade;
+drop schema if exists hol_dbx_catalog.<target_schema>_marketing cascade;
 ```
 
 Example for target schema `JI`:
 
 ```sql
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_staging cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_intermediate cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_marts cascade;
-drop schema if exists SNOWFLAKE_SUMMIT_2026_HOL_DB.JI_marketing cascade;
+drop schema if exists hol_dbx_catalog.JI_staging cascade;
+drop schema if exists hol_dbx_catalog.JI_intermediate cascade;
+drop schema if exists hol_dbx_catalog.JI_marts cascade;
+drop schema if exists hol_dbx_catalog.JI_marketing cascade;
 ```
 
-Do not drop shared source schemas or schemas owned by another attendee. Never drop `SNOWFLAKE_SUMMIT_2026_HOL_DB.SF_HOL_2026_RETAIL`.
+Do not drop shared source schemas or schemas owned by another attendee. Never drop `hol_dbx_catalog.hol_2026_retail`.
 
 ## 4. Optional: pre-compile for the next lab
 
 To make sure the local project is ready without creating warehouse objects:
 
 ```bash
-uvx --from dbt-snowflake dbt compile
+dbt compile
 ```
 
 Do not run `dbt build` here unless the next lab should start with prebuilt dbt models. For a clean attendee experience, leaving dbt schemas absent is usually preferable because the attendee can create models during the lab.
