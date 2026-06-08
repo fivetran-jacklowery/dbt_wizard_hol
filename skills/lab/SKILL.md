@@ -76,13 +76,47 @@ Show me a 10-row sample from fct_orders and the distinct values in the order_sta
 
 ## Prompt 2 — Sample real data from a mart
 
-Exercises `warehouse` for a live 10-row sample of `fct_orders` and a `SELECT DISTINCT` on `order_status`.
+Exercises live data access for a 10-row sample of `fct_orders` and a `SELECT DISTINCT` on `order_status`.
 
 This step makes the project real — up to now it was schemas and DAG diagrams, now it's rows. The `order_status` distinct-values check is the load-bearing part: without it, attendees will write filters based on guesses (`where order_status = 'shipped'`, `where order_status = 'complete'`). The real values in this project might be `delivered`, `in_progress`, `cancelled`, `returned`. Reading them directly prevents silent wrong-result bugs.
 
 Before running the warehouse checks, tell the attendee: "You may see Wizard's warehouse check next — that is not the final sample table. I'll summarize it cleanly below." Keep this as a short reassurance, not a long explanation.
 
-For the 10-row sample, show a readable representative subset: identifiers, dates, status field, primary financial measures, 1–2 useful flags. Render the distinct-values summary as a separate readable table. Do not mention `submit_table`; this lab environment may not expose that renderer. Do not paste raw warehouse tool output as the final answer unless diagnosing a failure.
+Do **not** guess column names. First inspect the actual `fct_orders` columns with:
+
+```sql
+select * from {{ ref('fct_orders') }} order by order_id
+```
+
+using `dbt_show` with `limit=1`. Then run the attendee-facing 10-row sample using
+only columns confirmed to exist. For the baseline HOL project, use this
+deterministic subset:
+
+```sql
+select
+    order_id,
+    customer_id,
+    order_date,
+    order_status,
+    shipping_state,
+    subtotal,
+    tax_amount,
+    shipping_cost,
+    total_amount,
+    order_revenue,
+    order_revenue_after_discount,
+    line_item_count,
+    total_quantity,
+    is_returned,
+    is_cancelled
+from {{ ref('fct_orders') }}
+order by order_id
+```
+
+Render the sample as a readable table with these columns, and render the
+distinct-values summary as a separate readable table. Do not mention
+`submit_table`; this lab environment may not expose that renderer. Do not paste
+raw warehouse tool output as the final answer unless diagnosing a failure.
 
 After responding, end with:
 
@@ -107,7 +141,13 @@ Write `orders_by_week.sql` into `models/marts/core/`, built on `fct_orders` via 
 - `gross_revenue` — sum of `order_revenue` for that week
 - `distinct_customers` — count of distinct `customer_id` values that week
 
-After writing the file, compile and preview. Do **not** run `dbt run`. Confirm:
+After writing the file, compile and preview. Do **not** run `dbt run`. Because
+the new model is intentionally not materialized yet, do **not** preview with
+`select * from {{ ref('orders_by_week') }}` — that relation will not exist.
+Preview the same aggregation logic inline with `dbt_show`, built from
+`{{ ref('fct_orders') }}`.
+
+Confirm:
 
 - Row count is plausible (roughly one row per week of order history).
 - `order_count`, `gross_revenue`, and `distinct_customers` are populated with non-zero values.
@@ -163,6 +203,12 @@ Compile int_orders_enriched and every downstream model that depends on it. Then 
 ## Prompt 5 — Compile downstream and preview
 
 Exercises `dbt_compile` across the full downstream lineage and `dbt_show` on the target model. Compiling downstream is the guarantee that no consumer lost a column or had a type change.
+
+Because Prompt 4 edits a view SQL file but does not materialize it, preview the
+current edited SQL, not a potentially stale warehouse relation. If
+`dbt_show` on `{{ ref('int_orders_enriched') }}` would read the existing dev
+view, use an inline `dbt_show` query that mirrors the edited
+`int_orders_enriched` SQL and orders by `order_id`.
 
 Confirm all four of these before reporting success:
 
