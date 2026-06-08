@@ -2,11 +2,12 @@
 name: install_dbt_charts
 description: >
   Install Dataface ("dbt Charts") into the HOL environment so attendees can build
-  declarative YAML dashboards on top of the dbt project. Standardizes on Python
-  3.13, pip installs dataface, runs `dft init` (adds skills + appends AGENTS.md,
-  no editor-extension auto-install), and installs the Dataface VS Code extension
-  from the public download link. Triggers on "$install_dbt_charts",
-  "install dbt charts", "set up dataface", "add dataface / dft to the lab".
+  declarative YAML dashboards on top of the dbt project. Reuses the HOL Python
+  virtual environment, pip installs Dataface with Databricks support, runs
+  `dft init` (adds skills + appends AGENTS.md, no editor-extension auto-install),
+  and installs the Dataface VS Code extension from the public download link.
+  Triggers on "$install_dbt_charts", "install dbt charts", "set up dataface",
+  "add dataface / dft to the lab".
 metadata:
   team: sales-engineering
   owner: "Dave Fowler <dave.fowler@fivetran.com>"
@@ -18,7 +19,7 @@ metadata:
 You are setting up **Dataface** (`dft`) on top of the existing dbt Wizard HOL
 project so the user can build declarative YAML dashboards over the dbt models.
 Dataface reads the project's existing `~/.dbt/profiles.yml`, so it connects to
-Snowflake the **same way dbt already does** — no new credentials.
+Databricks the **same way dbt already does** — no new credentials.
 
 Work through the steps in order. Run each command, confirm it succeeded, and
 only then move on. Keep output short; on success report a one-line confirmation.
@@ -29,54 +30,58 @@ query data until dbt connects.
 
 ---
 
-## Step 1 — Standardize on Python 3.13
+## Step 1 — Use the HOL Python environment
 
-Dataface supports Python `>=3.10,<3.14`; we standardize on **3.13**.
+Dataface supports Python `>=3.10,<3.14`. The HOL setup script already creates
+one Python virtual environment at `~/dataaisummit2026/venv`; reuse that same
+environment instead of creating a separate Dataface-only venv.
 
 Check what's available:
 
 ```bash
 python3 --version
-python3.13 --version 2>/dev/null || echo "no python3.13"
+test -d ~/dataaisummit2026/venv && echo "HOL venv exists" || echo "HOL venv missing"
 ```
 
-If `python3.13` is missing (macOS / Homebrew):
+If the HOL venv is missing, create it with the machine's existing `python3`:
 
 ```bash
-brew install python@3.13
+mkdir -p ~/dataaisummit2026
+python3 -m venv ~/dataaisummit2026/venv
 ```
 
-Confirm you have a 3.13 interpreter before continuing.
+Confirm `~/dataaisummit2026/venv/bin/python --version` reports a supported
+Python version before continuing.
 
 ---
 
 ## Step 2 — Install Dataface
 
-Install into a Python environment that the `dft` command will run from. To keep
-it isolated and aligned with the lab layout, use a 3.13 venv:
+Install into the existing HOL virtual environment that the `dft` command will
+run from:
 
 ```bash
 mkdir -p ~/dataaisummit2026
-# (Re)create the venv on 3.13 if it isn't already
-python3.13 -m venv ~/dataaisummit2026/dft_venv
-source ~/dataaisummit2026/dft_venv/bin/activate
+test -d ~/dataaisummit2026/venv || python3 -m venv ~/dataaisummit2026/venv
+source ~/dataaisummit2026/venv/bin/activate
 pip install --upgrade pip
-pip install "dataface[snowflake]"
+pip install "dataface[databricks]"
 ```
 
-> The `[snowflake]` extra ships the Snowflake adapter so `dft` can connect on its
-> own using `~/.dbt/profiles.yml` (the lab's key-pair auth). Plain
+> The `[databricks]` extra ships the Databricks dependencies so `dft` can connect
+> on its own using `~/.dbt/profiles.yml` (the lab's OAuth profile). Plain
 > `pip install dataface` is enough only if `dft` runs inside an environment that
-> already has a Snowflake dbt adapter.
+> already has the Databricks dependencies.
 
 ### 2b — Put `dft` on PATH (so it works in every terminal)
 
-The venv keeps `dft` isolated, but attendees shouldn't have to activate it. Symlink
-the binary into `~/.local/bin`, which `hol_setup.sh` already guarantees is on PATH:
+The venv keeps `dft` isolated, but attendees shouldn't have to activate it.
+Symlink the binary into `~/.local/bin`, which `hol_setup.sh` already guarantees
+is on PATH:
 
 ```bash
 mkdir -p ~/.local/bin
-ln -sf ~/dataaisummit2026/dft_venv/bin/dft ~/.local/bin/dft
+ln -sf ~/dataaisummit2026/venv/bin/dft ~/.local/bin/dft
 ```
 
 Now `dft` resolves in any new terminal — no venv activation needed.
@@ -159,7 +164,7 @@ dft validate faces/guide.yml
 
 - `dft validate` should report the starter face is valid.
 - For a live check, the user can run `dft serve` (defaults to
-  http://127.0.0.1:8000) — it will query Snowflake through the dbt profile.
+  http://127.0.0.1:8000) — it will query Databricks through the dbt profile.
 
 On success, report:
 
@@ -173,12 +178,13 @@ On success, report:
 
 - **`dft: command not found`** — the PATH symlink from Step 2b is missing or
   `~/.local/bin` isn't on PATH. Re-run
-  `ln -sf ~/dataaisummit2026/dft_venv/bin/dft ~/.local/bin/dft` and open a new
-  terminal. (Falling back, `source ~/dataaisummit2026/dft_venv/bin/activate` also
+  `ln -sf ~/dataaisummit2026/venv/bin/dft ~/.local/bin/dft` and open a new
+  terminal. (Falling back, `source ~/dataaisummit2026/venv/bin/activate` also
   works.)
 - **`dft init` prompts despite flags** — you're on an older dataface; upgrade with
-  `pip install -U "dataface[snowflake]"` and re-run, or add `--yes` (note `--yes`
-  defaults the editor extension to install, so keep `--no-vscode --no-cursor`).
+  `pip install -U "dataface[databricks]"` and re-run, or add `--yes` (note
+  `--yes` defaults the editor extension to install, so keep
+  `--no-vscode --no-cursor`).
 - **`dft serve` / `dft query` errors connecting** — same root cause as a failing
   `dbt debug`. Confirm `~/.dbt/profiles.yml` works for dbt first.
 - **VS Code extension didn't appear** — confirm the `code` CLI is on PATH (Step 4
