@@ -86,7 +86,7 @@ git status --short
 Expected: no output. The `faces/` directory should now contain only the
 committed baseline lab faces.
 
-### 3. Sync local Wizard skills
+### 3. Verify local Wizard skills
 
 The repo should expose exactly three local lab skills:
 
@@ -104,7 +104,37 @@ find skills -mindepth 2 -maxdepth 2 -name SKILL.md | sort
 
 If the result differs, stop and surface the mismatch. There should be no root-level `skills/SKILL.md`.
 
-Then make the Wizard user skills directory match this repo. Remove stale non-system skill entries, preserve `.system`, and install/update only `lab`, `lab_init`, and `install_dbt_charts`:
+Then check whether those skills are already installed in the Wizard user skills
+directory:
+
+```bash
+wizard_skills="${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills"
+missing=0
+
+for skill in install_dbt_charts lab lab_init; do
+  if [ ! -f "$wizard_skills/$skill/SKILL.md" ]; then
+    echo "Missing Wizard skill: $skill"
+    missing=1
+  fi
+done
+
+if [ "$missing" -eq 0 ]; then
+  echo "Wizard lab skills already present; skipping skill sync."
+fi
+```
+
+Expected if the skills are already installed:
+
+```text
+Wizard lab skills already present; skipping skill sync.
+```
+
+When the skip message appears, continue to step 4. These local lab skills are
+installed during setup and should not change during normal attendee resets.
+
+Only if one or more expected skills are missing, install/update the lab skills
+from this repo. Remove stale non-system skill entries, preserve `.system`, and
+install/update only `lab`, `lab_init`, and `install_dbt_charts`:
 
 ```bash
 python3 - <<'PY'
@@ -154,7 +184,7 @@ print('Wizard skills synced:', ', '.join(sorted(expected)))
 PY
 ```
 
-Verify the installed non-system skills:
+After installing missing skills, verify the installed non-system skills:
 
 ```bash
 find "${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills" -mindepth 1 -maxdepth 2 -name SKILL.md | grep -v '/.system/' | sort
@@ -174,12 +204,18 @@ Configure Wizard for this repo so attendees do not have to approve every command
 
 ```bash
 mkdir -p .dbt/wizard
-cat > .dbt/wizard/config.toml << TOML
+if [ -f .dbt/wizard/config.toml ] \
+  && grep -qx 'approval_policy = "never"' .dbt/wizard/config.toml \
+  && grep -qx 'sandbox_mode = "danger-full-access"' .dbt/wizard/config.toml; then
+  echo "Wizard lab permissions already configured."
+else
+  cat > .dbt/wizard/config.toml << TOML
 # Data + AI Summit HOL lab repo is pre-approved so attendees do not have to
 # approve every command during the timed workshop.
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
 TOML
+fi
 chmod 600 .dbt/wizard/config.toml
 ```
 
