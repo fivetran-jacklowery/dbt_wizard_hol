@@ -13,7 +13,7 @@ description: >
 
 **The setup:** It's your first week at The Builders Depot. You've been handed access to the dbt repo with a vague mandate: *"get familiar and ship something small by Friday."* Shortly after, the Director of Operations stops by with a follow-up ask: they want to know which orders have been generating the most support burden.
 
-This lab runs in three sections. The first four prompts orient you to the project and get a small first contribution shipped. The next two extend an existing model with a new data source — without breaking anything downstream. A final prompt turns the work into a live, interactive dashboard with **dbt Charts (Dataface)** — no BI tool, just YAML over the same dbt models.
+This lab runs in three sections. The first three prompts orient you to the project and get a small first contribution shipped. Prompt 4 turns that new model into a live, interactive dashboard with **dbt Charts (Dataface)** — no BI tool, just YAML over the same dbt model. The final two prompts extend an existing model with a new data source and rebuild downstream dependencies.
 
 ---
 
@@ -68,7 +68,7 @@ After responding, end with:
 **🟩 ⬇ YOUR NEXT PROMPT:** copy this as written, or type something similar in your own words:
 
 ```
-Show me a 10-row sample from fct_orders and the distinct values in the order_status column. Show both as readable tables. For the sample, use a representative subset of key columns.
+Show me a 10-row sample of fct_orders.
 ```
 ---
 
@@ -76,9 +76,9 @@ Show me a 10-row sample from fct_orders and the distinct values in the order_sta
 
 ## Prompt 2 — Sample real data from a mart
 
-Exercises live data access for a 10-row sample of `fct_orders` and a `SELECT DISTINCT` on `order_status`.
+Exercises live data access for a 10-row sample of `fct_orders`.
 
-This step makes the project real — up to now it was schemas and DAG diagrams, now it's rows. The `order_status` distinct-values check is the load-bearing part: without it, attendees will write filters based on guesses (`where order_status = 'shipped'`, `where order_status = 'complete'`). The real values in this project might be `delivered`, `in_progress`, `cancelled`, `returned`. Reading them directly prevents silent wrong-result bugs.
+This step makes the project real — up to now it was schemas and DAG diagrams, now it's rows.
 
 Before running the warehouse checks, tell the attendee: "You may see Wizard's warehouse check next — that is not the final sample table. I'll summarize it cleanly below." Keep this as a short reassurance, not a long explanation.
 
@@ -113,8 +113,7 @@ from {{ ref('fct_orders') }}
 order by order_id
 ```
 
-Render the sample as a readable table with these columns, and render the
-distinct-values summary as a separate readable table. Do not mention
+Render the sample as a readable table with these columns. Do not mention
 `submit_table`; this lab environment may not expose that renderer. Do not paste
 raw warehouse tool output as the final answer unless diagnosing a failure.
 
@@ -160,24 +159,36 @@ This prompt edits files, so Wizard may render an automatic changes/impact card a
 **🟩 ⬇ YOUR NEXT PROMPT:** copy this as written, or type something similar in your own words:
 
 ```
-Show me the built orders_by_week table. Preview 10 rows ordered by order_week, then summarize its row count, first week, last week, total orders, and gross revenue.
+Show me a dbt Chart of this new orders_by_week model.
 ```
 ---
 
 ---
 
-## Prompt 4 — Show the built orders_by_week table
+## Prompt 4 — Visualize orders_by_week with dbt Charts (Dataface)
 
-Exercises `dbt_show` against the built `orders_by_week` relation. This is the
-payoff for Prompt 3: the attendee sees the table they just created, not an
-inline substitute query.
+Exercises **dbt Charts (Dataface, `dft`)** end to end: the Wizard authors a
+`faces/*.yml`, wires queries to the mart via `{{ ref() }}` (so it resolves to
+the attendee's own schema), validates, then runs `dft serve` to open the
+dashboard live in the browser — over the same Databricks data the lab just
+built.
 
-Query `{{ ref('orders_by_week') }}` directly. Confirm:
+Keep this as the single combined **build-and-serve** request above; do not split
+it into separate steps. This visualizes the model the attendee created in Prompt
+3 (`orders_by_week`). Have Wizard name the new face `weekly_orders` (so it
+doesn't collide with the `orders` entity face or the `orders_by_week` model).
 
-1. The preview shows `order_week`, `order_count`, `gross_revenue`, and `distinct_customers`.
-2. `order_week` is a date-like value.
-3. Row count is plausible for weekly order history.
-4. Total orders and gross revenue match the expected source coverage.
+Build the dashboard from the materialized `{{ ref('orders_by_week') }}` table
+created in Prompt 3. Do not rebuild the weekly aggregation directly from
+`{{ ref('fct_orders') }}` in the face YAML. Drop the current partial week in the
+dashboard query if it exists so the trend doesn't dip at the right edge.
+
+The deliverable: a served `faces/weekly_orders.yml` with KPI tiles (total
+orders, gross revenue, distinct customers) and a weekly trend (order volume +
+revenue) over `order_week`, opened in the browser via `dft serve`. After it
+serves, name the payoff in one sentence: the weekly model they built earlier in
+the lab is now a live, interactive dashboard — defined in version-controlled
+YAML, with zero BI-tool setup.
 
 After responding, end with:
 
@@ -210,6 +221,9 @@ Two non-negotiables:
 
 The edit adds three CTEs before the `enriched` CTE: `ticket_rollup` (count + open flag per order), `latest_ticket` (most recent status via `QUALIFY ROW_NUMBER()`), and `ticket_summary` (joins the two). The `enriched` CTE then left-joins to `ticket_summary` and appends the three new columns.
 
+Do not build `int_orders_enriched` or its downstream models in this prompt.
+Compile and run lightweight structural checks only; Prompt 6 is the build step.
+
 For consistent current-state context, use `references/enriched_orders_current_state_output_template.md` when summarizing what the model currently produces.
 
 This prompt edits files, so Wizard may render an automatic changes/impact card after the response. Still include this next-prompt callout in the same response so attendees are never left without the next copy/paste step:
@@ -218,59 +232,32 @@ This prompt edits files, so Wizard may render an automatic changes/impact card a
 **🟩 ⬇ YOUR NEXT PROMPT:** copy this as written, or type something similar in your own words:
 
 ```
-Build int_orders_enriched and every downstream model that depends on it. Then preview 20 rows of the built int_orders_enriched model ordered by order_id.
+Build int_orders_enriched and every downstream model that depends on it.
 ```
 ---
 
 ---
 
-## Prompt 6 — Build downstream and preview
+## Prompt 6 — Build downstream
 
-Exercises `dbt_build` across the edited model and its downstream lineage, then
-`dbt_show` on the built target model. Building is the guarantee that the support
-context exists in the attendee's dev schema and downstream consumers still work.
+Exercises `dbt_build` across the edited model and its downstream lineage.
+Building is the guarantee that the support context exists in the attendee's dev
+schema and downstream consumers still work.
 
-Run `dbt build --select int_orders_enriched+`. After the build succeeds, preview
-`{{ ref('int_orders_enriched') }}` directly, ordered by `order_id`. Do not use an
-inline substitute query here — the point is to show the built support-enriched
-model/table in the dev schema.
+Run `dbt build --select int_orders_enriched+`. After the build succeeds, perform
+lightweight validation queries as needed, but do not make the attendee-facing
+output a 20-row preview table and do not reopen the `weekly_orders` dbt Chart.
+The point is to confirm the support-enriched model and downstream DAG still
+build cleanly.
 
 Confirm all four of these before reporting success:
 
-1. The preview shows `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status` in the output.
+1. The built `int_orders_enriched` relation includes `ticket_count`, `has_open_ticket_flag`, and `last_ticket_status`.
 2. Orders without tickets still appear — `ticket_count` is `0` for orders with no linked tickets.
 3. The row count of `int_orders_enriched` is unchanged from the pre-edit baseline. If it grew, the ticket aggregation fanned out and the model needs a re-edit.
 4. All downstream models and tests selected by the build completed without error.
 
 If anything fails, diagnose with dbt Wizard before continuing.
-
-After responding (assuming all checks pass), hand off to the dashboard finale with the standard next-prompt callout in the same response, even if Wizard renders an automatic card below it:
-
----
-**🟩 ⬇ YOUR NEXT PROMPT:** copy this as written, or type something similar in your own words:
-
-```
-Make me a dashboard of orders by week and serve it.
-```
----
-
-## Prompt 7 — Visualize it with dbt Charts (Dataface)
-
-Exercises **dbt Charts (Dataface, `dft`)** end to end: the Wizard authors a `faces/*.yml`, wires queries to the marts via `{{ ref() }}` (so it resolves to the attendee's own schema), validates, then runs `dft serve` to open the dashboard live in the browser — over the same Databricks data the lab just built.
-
-Keep this as the single combined **build-and-serve** request above; do not split it into separate steps. This visualizes the very thing the attendee modeled back in Prompt 3 (`orders_by_week`). Have Wizard name the new face `weekly_orders` (so it doesn't collide with the `orders` entity face or the `orders_by_week` model).
-
-Build the dashboard from the materialized `{{ ref('orders_by_week') }}` table
-created in Prompt 3. Do not rebuild the weekly aggregation directly from
-`{{ ref('fct_orders') }}` in the face YAML. Drop the current partial week in the
-dashboard query if it exists so the trend doesn't dip at the right edge.
-
-The deliverable: a served `faces/weekly_orders.yml` with KPI tiles (total orders,
-gross revenue, distinct customers) and a weekly trend (order volume + revenue)
-over `order_week`, opened in the browser via `dft serve`. After it serves, name
-the payoff in one sentence: the weekly model they built earlier in the lab is now
-a live, interactive dashboard — defined in version-controlled YAML, with zero
-BI-tool setup.
 
 If the attendee has time, point out that the repo already ships linked dashboards (`overview`, `customers`, `products`, `orders`) whose charts **drill through** to canonical list and detail views — e.g. click a region on the overview to land on a filtered customer list, then click a customer to see their orders and support tickets. Offer the optional capstone:
 
@@ -294,7 +281,7 @@ Open the overview dashboard with dft and walk me through how clicking a chart dr
 
 ## Lab cleanup
 
-After Prompt 7 (or the optional drill-through capstone), use `$lab_init` to reset the repo and Databricks dev schemas for the next attendee. `$lab_init` also clears any attendee-created faces (like `weekly_orders.yml`) while keeping the committed dashboards.
+After Prompt 6 (or the optional drill-through capstone), use `$lab_init` to reset the repo and Databricks dev schemas for the next attendee. `$lab_init` also clears any attendee-created faces (like `weekly_orders.yml`) while keeping the committed dashboards.
 
 ---
 
