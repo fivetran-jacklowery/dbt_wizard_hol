@@ -2,8 +2,6 @@
 # dbt Wizard Hands-On Lab — MacBook Setup Script
 # Prerequisites (done by instructor before running):
 #   - ~/.ssh/id_ed25519 : SSH deploy key, already added to GitHub repo
-#   - Databricks env vars set:
-#       DATABRICKS_HOST, DATABRICKS_HTTP_PATH
 #   - Xcode CLT         : run 'xcode-select --install' and click Install
 
 set -euo pipefail
@@ -39,8 +37,6 @@ echo ""
 info "Checking required files..."
 
 [[ -f ~/.ssh/id_ed25519 ]]   || fail "Missing: ~/.ssh/id_ed25519"
-[[ -n "${DATABRICKS_HOST:-}" ]] || fail "Missing env var: DATABRICKS_HOST"
-[[ -n "${DATABRICKS_HTTP_PATH:-}" ]] || fail "Missing env var: DATABRICKS_HTTP_PATH"
 
 chmod 600 ~/.ssh/id_ed25519
 
@@ -186,8 +182,8 @@ hol_dbx_profile:
       client_secret: ""
       connect_retries: 3
       dbt_databricks_verify_ssl: false
-      host: ${DATABRICKS_HOST}
-      http_path: ${DATABRICKS_HTTP_PATH}
+      host: ""
+      http_path: ""
       schema: ${SCHEMA}
       threads: 4
       type: databricks
