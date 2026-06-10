@@ -5,7 +5,6 @@ description: "Executive overview of the dbt Wizard store: revenue, orders, custo
 # in dataface.yml). Use dbt ref() so tables resolve to each user's own marts
 # schema (e.g. lab_user_1_dev_marts) — bare table names do NOT resolve.
 source: warehouse
-theme: cream
 
 variables:
   date_range:

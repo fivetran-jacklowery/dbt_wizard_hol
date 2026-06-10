@@ -2,7 +2,6 @@ title: Products
 description: Canonical product list (built from real order-item sales) — click a row for detail.
 
 source: warehouse
-theme: cream
 
 # Built from fct_order_items, not dim_products: the dim_products sales rollups
 # (total_units_sold / total_revenue) are empty in this project.

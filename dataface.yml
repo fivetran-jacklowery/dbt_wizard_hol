@@ -14,6 +14,10 @@
 #   # dbt target override (defaults to DBT_TARGET env var, then profile default)
 #   # target: dev
 
+# Project default theme — inherited by every face without an explicit `theme:`.
+# Resolution order: DFT_DEFAULT_THEME env var > this key > built-in default.
+theme: cream
+
 # Default data source — reuse the lab's active dbt profile.
 # Queries with no explicit `source:` resolve to this; tables resolve in the
 # profile's configured Unity Catalog catalog/schema.
