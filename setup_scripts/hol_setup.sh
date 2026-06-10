@@ -23,7 +23,7 @@ NUM=$(echo "$USERNAME" | grep -o '[0-9]*')
 [[ -n "$NUM" ]] || fail "Could not determine lab number from username '$USERNAME'. Expected format: demo1, demo2, etc."
 
 SCHEMA="lab_user_${NUM}_dev"
-LAB_DIR="$HOME/snowsummit2026"
+LAB_DIR="$HOME/summit2026"
 PROJECT_DIR="$LAB_DIR/dbt_wizard_hol"
 VENV_DIR="$LAB_DIR/venv"
 
@@ -123,8 +123,13 @@ fi
 echo ""
 info "Creating lab folder structure..."
 
+if [[ -d "$HOME/snowsummit2026" && ! -d "$LAB_DIR" ]]; then
+    mv "$HOME/snowsummit2026" "$LAB_DIR"
+    ok "Renamed ~/snowsummit2026 to $LAB_DIR"
+fi
+
 mkdir -p "$LAB_DIR"
-ok "Lab folder created at $LAB_DIR"
+ok "Lab folder ready at $LAB_DIR"
 
 # ─── 9. Python virtual environment ───────────────────────────────────────────
 echo ""
