@@ -2,8 +2,8 @@
 # dbt Wizard Hands-On Lab — MacBook Setup Script
 # Prerequisites (done by instructor before running):
 #   - ~/.ssh/id_ed25519 : SSH deploy key, already added to GitHub repo
-#   - Databricks OAuth service-principal env vars set:
-#       DATABRICKS_HOST, DATABRICKS_HTTP_PATH, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
+#   - Databricks env vars set:
+#       DATABRICKS_HOST, DATABRICKS_HTTP_PATH
 #   - Xcode CLT         : run 'xcode-select --install' and click Install
 
 set -euo pipefail
@@ -25,7 +25,7 @@ NUM=$(echo "$USERNAME" | grep -o '[0-9]*')
 [[ -n "$NUM" ]] || fail "Could not determine lab number from username '$USERNAME'. Expected format: demo1, demo2, etc."
 
 SCHEMA="lab_user_${NUM}_dev"
-LAB_DIR="$HOME/dataaisummit2026"
+LAB_DIR="$HOME/snowsummit2026"
 PROJECT_DIR="$LAB_DIR/dbt_wizard_hol"
 VENV_DIR="$LAB_DIR/venv"
 
@@ -41,12 +41,10 @@ info "Checking required files..."
 [[ -f ~/.ssh/id_ed25519 ]]   || fail "Missing: ~/.ssh/id_ed25519"
 [[ -n "${DATABRICKS_HOST:-}" ]] || fail "Missing env var: DATABRICKS_HOST"
 [[ -n "${DATABRICKS_HTTP_PATH:-}" ]] || fail "Missing env var: DATABRICKS_HTTP_PATH"
-[[ -n "${DATABRICKS_CLIENT_ID:-}" ]] || fail "Missing env var: DATABRICKS_CLIENT_ID"
-[[ -n "${DATABRICKS_CLIENT_SECRET:-}" ]] || fail "Missing env var: DATABRICKS_CLIENT_SECRET"
 
 chmod 600 ~/.ssh/id_ed25519
 
-ok "Git key and Databricks OAuth env vars present"
+ok "Git key and Databricks env vars present"
 
 # ─── 1. Xcode Command Line Tools ──────────────────────────────────────────────
 # PREWORK: xcode-select --install (click Install when prompted, wait to complete)
@@ -184,8 +182,8 @@ hol_dbx_profile:
     dev:
       auth_type: oauth
       catalog: hol_dbx_catalog
-      client_id: ${DATABRICKS_CLIENT_ID}
-      client_secret: ${DATABRICKS_CLIENT_SECRET}
+      client_id: ""
+      client_secret: ""
       connect_retries: 3
       dbt_databricks_verify_ssl: false
       host: ${DATABRICKS_HOST}

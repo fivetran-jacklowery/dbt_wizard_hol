@@ -1,9 +1,9 @@
 title: "Business Overview"
 description: "Executive overview of the dbt Wizard store: revenue, orders, customers, products, regions, and support."
 
-# Queries hit Snowflake via the lab's dbt profile (configured as `warehouse`
+# Queries hit Databricks via the lab's dbt profile (configured as `warehouse`
 # in dataface.yml). Use dbt ref() so tables resolve to each user's own marts
-# schema (e.g. dave_fowler_marts) — bare table names do NOT resolve.
+# schema (e.g. lab_user_1_dev_marts) — bare table names do NOT resolve.
 source: warehouse
 theme: cream
 
