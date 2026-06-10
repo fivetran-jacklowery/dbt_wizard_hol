@@ -33,24 +33,24 @@ query data until dbt connects.
 ## Step 1 — Use the HOL Python environment
 
 Dataface supports Python `>=3.10,<3.14`. The HOL setup script already creates
-one Python virtual environment at `~/dataaisummit2026/venv`; reuse that same
+one Python virtual environment at `~/summit2026/venv`; reuse that same
 environment instead of creating a separate Dataface-only venv.
 
 Check what's available:
 
 ```bash
 python3 --version
-test -d ~/dataaisummit2026/venv && echo "HOL venv exists" || echo "HOL venv missing"
+test -d ~/summit2026/venv && echo "HOL venv exists" || echo "HOL venv missing"
 ```
 
 If the HOL venv is missing, create it with the machine's existing `python3`:
 
 ```bash
-mkdir -p ~/dataaisummit2026
-python3 -m venv ~/dataaisummit2026/venv
+mkdir -p ~/summit2026
+python3 -m venv ~/summit2026/venv
 ```
 
-Confirm `~/dataaisummit2026/venv/bin/python --version` reports a supported
+Confirm `~/summit2026/venv/bin/python --version` reports a supported
 Python version before continuing.
 
 ---
@@ -61,9 +61,9 @@ Install into the existing HOL virtual environment that the `dft` command will
 run from:
 
 ```bash
-mkdir -p ~/dataaisummit2026
-test -d ~/dataaisummit2026/venv || python3 -m venv ~/dataaisummit2026/venv
-source ~/dataaisummit2026/venv/bin/activate
+mkdir -p ~/summit2026
+test -d ~/summit2026/venv || python3 -m venv ~/summit2026/venv
+source ~/summit2026/venv/bin/activate
 pip install --upgrade pip
 pip install "dataface[databricks]"
 ```
@@ -81,7 +81,7 @@ is on PATH:
 
 ```bash
 mkdir -p ~/.local/bin
-ln -sf ~/dataaisummit2026/venv/bin/dft ~/.local/bin/dft
+ln -sf ~/summit2026/venv/bin/dft ~/.local/bin/dft
 ```
 
 Now `dft` resolves in any new terminal — no venv activation needed.
@@ -178,8 +178,8 @@ On success, report:
 
 - **`dft: command not found`** — the PATH symlink from Step 2b is missing or
   `~/.local/bin` isn't on PATH. Re-run
-  `ln -sf ~/dataaisummit2026/venv/bin/dft ~/.local/bin/dft` and open a new
-  terminal. (Falling back, `source ~/dataaisummit2026/venv/bin/activate` also
+  `ln -sf ~/summit2026/venv/bin/dft ~/.local/bin/dft` and open a new
+  terminal. (Falling back, `source ~/summit2026/venv/bin/activate` also
   works.)
 - **`dft init` prompts despite flags** — you're on an older dataface; upgrade with
   `pip install -U "dataface[databricks]"` and re-run, or add `--yes` (note

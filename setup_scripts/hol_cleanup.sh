@@ -17,7 +17,7 @@ skip() { echo -e "  ${NC}skipped — $1${NC}"; }
 
 # ─── Derive paths ─────────────────────────────────────────────────────────────
 USERNAME=$(whoami)
-LAB_DIR="$HOME/dataaisummit2026"
+LAB_DIR="$HOME/summit2026"
 
 # ─── Preview what will be removed ─────────────────────────────────────────────
 echo ""

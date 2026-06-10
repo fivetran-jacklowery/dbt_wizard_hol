@@ -232,7 +232,7 @@ The lab now includes a Dataface ("dbt Charts") section, so `dft` must be present
 Check for it:
 
 ```bash
-~/dataaisummit2026/dft_venv/bin/dft --version 2>/dev/null \
+~/summit2026/venv/bin/dft --version 2>/dev/null \
   || dft --version 2>/dev/null \
   || echo "dft missing"
 ```
