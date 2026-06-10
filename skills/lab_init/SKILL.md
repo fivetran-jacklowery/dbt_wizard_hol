@@ -56,6 +56,10 @@ If network/fetch is unavailable, reset to the local `hol_dbx` instead:
 git reset --hard hol_dbx
 ```
 
+Immediately after the branch is confirmed and reset, sync the Wizard skills from
+the repo so all subsequent steps run with skills from the correct branch. Follow
+the full skill sync logic from step 3 below, then continue to step 2.
+
 ### 2. Clear local repo state, dbt artifacts, and Dataface output
 
 Run:
@@ -87,6 +91,9 @@ Expected: no output. The `faces/` directory should now contain only the
 committed baseline lab faces.
 
 ### 3. Verify local Wizard skills
+
+> Skills were already synced at the end of step 1. This step documents the sync
+> logic and serves as a reference if the step 1 sync needs to be retried.
 
 The repo should expose exactly three local lab skills:
 
