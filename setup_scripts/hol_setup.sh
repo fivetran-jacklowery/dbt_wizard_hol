@@ -172,7 +172,11 @@ info "Writing dbt profiles.yml..."
 
 mkdir -p ~/.dbt
 
-cat > ~/.dbt/profiles.yml << YAML
+if grep -q 'hol_dbx_profile' ~/.dbt/profiles.yml 2>/dev/null; then
+    ok "hol_dbx_profile already exists in ~/.dbt/profiles.yml"
+else
+    cat >> ~/.dbt/profiles.yml << YAML
+
 hol_dbx_profile:
   outputs:
     dev:
@@ -189,9 +193,10 @@ hol_dbx_profile:
       type: databricks
   target: dev
 YAML
+    ok "hol_dbx_profile appended to ~/.dbt/profiles.yml"
+fi
 
 chmod 600 ~/.dbt/profiles.yml
-ok "profiles.yml written to ~/.dbt/profiles.yml"
 
 # ─── 13. PATH persistence ────────────────────────────────────────────────────
 echo ""
