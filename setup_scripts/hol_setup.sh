@@ -186,8 +186,20 @@ hol_dbx_profile:
       client_secret: ""
       connect_retries: 3
       dbt_databricks_verify_ssl: false
-      host: ""
-      http_path: ""
+      host: adb-7405605464190909.9.azuredatabricks.net
+      http_path: /sql/1.0/warehouses/540622d1091eda2b
+      schema: ${SCHEMA}
+      threads: 4
+      type: databricks
+    prod:
+      auth_type: oauth
+      catalog: hol_dbx_catalog
+      client_id: ""
+      client_secret: ""
+      connect_retries: 3
+      dbt_databricks_verify_ssl: false
+      host: adb-7405605464190909.9.azuredatabricks.net
+      http_path: /sql/1.0/warehouses/540622d1091eda2b
       schema: ${SCHEMA}
       threads: 4
       type: databricks
