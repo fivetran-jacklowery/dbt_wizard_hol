@@ -16,3 +16,6 @@ renders/
 __pycache__/
 *.duckdb
 lab_reference/lab_scripts/*.generated.sql
+
+# Dataface serve cache (dft serve, on by default in 0.1.5)
+.dft/
