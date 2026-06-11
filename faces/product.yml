@@ -38,10 +38,10 @@ queries:
       ORDER BY order_date DESC
 
 charts:
-  kpi_revenue:   { type: kpi, query: summary, label: Revenue, value: revenue, format: currency }
-  kpi_units:     { type: kpi, query: summary, label: Units Sold, value: units_sold, format: integer }
-  kpi_orders:    { type: kpi, query: summary, label: Orders, value: orders, format: integer }
-  kpi_customers: { type: kpi, query: summary, label: Customers, value: customers, format: integer }
+  kpi_revenue:   { type: kpi, query: summary, label: Revenue, value: revenue, style: { value: { format: currency } } }
+  kpi_units:     { type: kpi, query: summary, label: Units Sold, value: units_sold, style: { value: { format: integer } } }
+  kpi_orders:    { type: kpi, query: summary, label: Orders, value: orders, style: { value: { format: integer } } }
+  kpi_customers: { type: kpi, query: summary, label: Customers, value: customers, style: { value: { format: integer } } }
 
   revenue_trend:
     title: Revenue by Month
@@ -49,8 +49,7 @@ charts:
     type: bar
     x: order_month
     y: revenue
-    format: currency
-
+    style: { number_format: currency }
   units_trend:
     title: Units Sold by Month
     query: monthly_sales

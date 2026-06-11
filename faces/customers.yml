@@ -8,22 +8,21 @@ source: warehouse
 # so an unset variable shows everything.
 variables:
   region:
-    label: Region
-    allow_null: true
+    input: select
     placeholder: All regions
     options:
       query: region_options
       column: region
   customer_tier:
+    input: select
     label: Tier
-    allow_null: true
     placeholder: All tiers
     options:
       query: tier_options
       column: customer_tier
   customer_type:
+    input: select
     label: Type
-    allow_null: true
     placeholder: All types
     options:
       query: type_options
@@ -83,10 +82,10 @@ queries:
       GROUP BY 1 ORDER BY lifetime_revenue DESC
 
 charts:
-  kpi_customers: { type: kpi, query: kpis, label: Customers, value: customers, format: ",.0f" }
-  kpi_revenue:   { type: kpi, query: kpis, label: Lifetime Revenue, value: lifetime_revenue, format: "$,.0f" }
-  kpi_avg_ltv:   { type: kpi, query: kpis, label: Avg Lifetime Value, value: avg_ltv, format: "$,.0f" }
-  kpi_tickets:   { type: kpi, query: kpis, label: Support Tickets, value: tickets, format: ",.0f" }
+  kpi_customers: { type: kpi, query: kpis, label: Customers, value: customers, style: { value: { format: ",.0f" } } }
+  kpi_revenue:   { type: kpi, query: kpis, label: Lifetime Revenue, value: lifetime_revenue, style: { value: { format: "$,.0f" } } }
+  kpi_avg_ltv:   { type: kpi, query: kpis, label: Avg Lifetime Value, value: avg_ltv, style: { value: { format: "$,.0f" } } }
+  kpi_tickets:   { type: kpi, query: kpis, label: Support Tickets, value: tickets, style: { value: { format: ",.0f" } } }
 
   tier_bar:
     title: Customers by Tier — click to filter
@@ -102,7 +101,7 @@ charts:
     type: bar
     x: region
     y: lifetime_revenue
-    format: currency
+    style: { number_format: currency }
     sort: { by: lifetime_revenue, order: desc }
     link: "/customers/?region={{ x }}"
 
@@ -112,7 +111,7 @@ charts:
     type: bar
     x: customer_type
     y: lifetime_revenue
-    format: currency
+    style: { number_format: currency }
     sort: { by: lifetime_revenue, order: desc }
     link: "/customers/?customer_type={{ x }}"
 

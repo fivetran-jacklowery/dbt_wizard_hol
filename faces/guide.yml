@@ -82,7 +82,9 @@ charts:
     query: kpi_summary
     label: Total Revenue (H1)
     value: total_revenue
-    format: currency_compact
+    style:
+      value:
+        format: currency_compact
     support:
       value: revenue_delta
       label: vs H1 last year
@@ -95,7 +97,9 @@ charts:
     query: kpi_summary
     label: Avg Deal Size
     value: avg_deal
-    format: currency_compact
+    style:
+      value:
+        format: currency_compact
 
   data_table:
     type: table

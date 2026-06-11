@@ -5,15 +5,15 @@ source: warehouse
 
 variables:
   order_status:
+    input: select
     label: Status
-    allow_null: true
     placeholder: All statuses
     options:
       query: status_options
       column: order_status
   shipping_state:
+    input: select
     label: State
-    allow_null: true
     placeholder: All states
     options:
       query: state_options
@@ -68,10 +68,10 @@ queries:
       GROUP BY 1 ORDER BY 1
 
 charts:
-  kpi_orders:  { type: kpi, query: kpis, label: Orders, value: orders, format: ",.0f" }
-  kpi_revenue: { type: kpi, query: kpis, label: Revenue, value: revenue, format: "$,.0f" }
-  kpi_aov:     { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, format: "$,.2f" }
-  kpi_items:   { type: kpi, query: kpis, label: Line Items, value: items, format: ",.0f" }
+  kpi_orders:  { type: kpi, query: kpis, label: Orders, value: orders, style: { value: { format: ",.0f" } } }
+  kpi_revenue: { type: kpi, query: kpis, label: Revenue, value: revenue, style: { value: { format: "$,.0f" } } }
+  kpi_aov:     { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, style: { value: { format: "$,.2f" } } }
+  kpi_items:   { type: kpi, query: kpis, label: Line Items, value: items, style: { value: { format: ",.0f" } } }
 
   state_bar:
     title: Revenue by State — click to filter
@@ -79,7 +79,7 @@ charts:
     type: bar
     x: shipping_state
     y: revenue
-    format: currency
+    style: { number_format: currency }
     sort: { by: revenue, order: desc }
     link: "/orders/?shipping_state={{ x }}"
 

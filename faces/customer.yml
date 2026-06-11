@@ -41,12 +41,12 @@ queries:
       ORDER BY ticket_created_at DESC
 
 charts:
-  kpi_ltv:     { type: kpi, query: profile, label: Lifetime Revenue, value: lifetime_revenue, format: currency }
-  kpi_orders:  { type: kpi, query: profile, label: Orders, value: total_orders, format: integer }
-  kpi_aov:     { type: kpi, query: profile, label: Avg Order Value, value: avg_order_value, format: currency }
-  kpi_tix:     { type: kpi, query: profile, label: Support Tickets, value: total_support_tickets, format: integer }
-  kpi_return:  { type: kpi, query: profile, label: Return Rate, value: return_rate, format: ".0%" }
-  kpi_tenure:  { type: kpi, query: profile, label: Tenure (days), value: customer_tenure_days, format: integer }
+  kpi_ltv:     { type: kpi, query: profile, label: Lifetime Revenue, value: lifetime_revenue, style: { value: { format: currency } } }
+  kpi_orders:  { type: kpi, query: profile, label: Orders, value: total_orders, style: { value: { format: integer } } }
+  kpi_aov:     { type: kpi, query: profile, label: Avg Order Value, value: avg_order_value, style: { value: { format: currency } } }
+  kpi_tix:     { type: kpi, query: profile, label: Support Tickets, value: total_support_tickets, style: { value: { format: integer } } }
+  kpi_return:  { type: kpi, query: profile, label: Return Rate, value: return_rate, style: { value: { format: ".0%" } } }
+  kpi_tenure:  { type: kpi, query: profile, label: Tenure (days), value: customer_tenure_days, style: { value: { format: integer } } }
 
   spend_trend:
     title: Spend Over Time
@@ -54,8 +54,7 @@ charts:
     type: bar
     x: order_month
     y: spend
-    format: currency
-
+    style: { number_format: currency }
   orders_table:
     title: Orders — click a row to open the order
     query: orders

@@ -65,7 +65,7 @@ mkdir -p ~/summit2026
 test -d ~/summit2026/venv || python3 -m venv ~/summit2026/venv
 source ~/summit2026/venv/bin/activate
 pip install --upgrade pip
-pip install "dataface[databricks]"
+pip install "dataface[databricks]==0.1.5"
 ```
 
 > The `[databricks]` extra ships the Databricks dependencies so `dft` can connect
@@ -182,7 +182,7 @@ On success, report:
   terminal. (Falling back, `source ~/summit2026/venv/bin/activate` also
   works.)
 - **`dft init` prompts despite flags** — you're on an older dataface; upgrade with
-  `pip install -U "dataface[databricks]"` and re-run, or add `--yes` (note
+  `pip install -U "dataface[databricks]==0.1.5"` and re-run, or add `--yes` (note
   `--yes` defaults the editor extension to install, so keep
   `--no-vscode --no-cursor`).
 - **`dft serve` / `dft query` errors connecting** — same root cause as a failing

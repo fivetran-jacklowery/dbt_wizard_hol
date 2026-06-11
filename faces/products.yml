@@ -7,8 +7,8 @@ source: warehouse
 # (total_units_sold / total_revenue) are empty in this project.
 variables:
   category_name:
+    input: select
     label: Category
-    allow_null: true
     placeholder: All categories
     options:
       query: category_options
@@ -57,10 +57,10 @@ queries:
       GROUP BY 1 ORDER BY revenue DESC
 
 charts:
-  kpi_revenue:  { type: kpi, query: kpis, label: Revenue, value: revenue, format: "$,.0f" }
-  kpi_units:    { type: kpi, query: kpis, label: Units Sold, value: units, format: ",.0f" }
-  kpi_orders:   { type: kpi, query: kpis, label: Orders, value: orders, format: ",.0f" }
-  kpi_products: { type: kpi, query: kpis, label: Products Sold, value: products, format: ",.0f" }
+  kpi_revenue:  { type: kpi, query: kpis, label: Revenue, value: revenue, style: { value: { format: "$,.0f" } } }
+  kpi_units:    { type: kpi, query: kpis, label: Units Sold, value: units, style: { value: { format: ",.0f" } } }
+  kpi_orders:   { type: kpi, query: kpis, label: Orders, value: orders, style: { value: { format: ",.0f" } } }
+  kpi_products: { type: kpi, query: kpis, label: Products Sold, value: products, style: { value: { format: ",.0f" } } }
 
   category_bar:
     title: Revenue by Category — click to filter
@@ -68,7 +68,7 @@ charts:
     type: bar
     x: category_name
     y: revenue
-    format: currency
+    style: { number_format: currency }
     sort: { by: revenue, order: desc }
     link: "/products/?category_name={{ x }}"
 
@@ -78,7 +78,7 @@ charts:
     type: bar
     x: brand
     y: revenue
-    format: currency
+    style: { number_format: currency }
     sort: { by: revenue, order: desc }
 
   product_table:

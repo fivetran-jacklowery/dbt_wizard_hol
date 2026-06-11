@@ -32,11 +32,11 @@ queries:
       WHERE {{ filter('order_id', order_id) }}
 
 charts:
-  kpi_revenue: { type: kpi, query: header, label: Order Revenue, value: order_revenue_after_discount, format: currency }
-  kpi_total:   { type: kpi, query: header, label: Total Billed, value: total_amount, format: currency }
-  kpi_items:   { type: kpi, query: header, label: Line Items, value: line_item_count, format: integer }
-  kpi_qty:     { type: kpi, query: header, label: Units, value: total_quantity, format: integer }
-  kpi_ship:    { type: kpi, query: header, label: Shipping, value: shipping_cost, format: currency }
+  kpi_revenue: { type: kpi, query: header, label: Order Revenue, value: order_revenue_after_discount, style: { value: { format: currency } } }
+  kpi_total:   { type: kpi, query: header, label: Total Billed, value: total_amount, style: { value: { format: currency } } }
+  kpi_items:   { type: kpi, query: header, label: Line Items, value: line_item_count, style: { value: { format: integer } } }
+  kpi_qty:     { type: kpi, query: header, label: Units, value: total_quantity, style: { value: { format: integer } } }
+  kpi_ship:    { type: kpi, query: header, label: Shipping, value: shipping_cost, style: { value: { format: currency } } }
 
   items_table:
     title: Line Items — click to open the product
