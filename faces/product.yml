@@ -5,7 +5,6 @@ source: warehouse
 
 variables:
   product_id:
-    label: Product ID
     input: text
     default: "10"
 

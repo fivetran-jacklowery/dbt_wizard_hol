@@ -8,7 +8,6 @@ source: warehouse
 
 variables:
   date_range:
-    label: Date Range
     input: daterange
     default: ["2025-03-01", "2026-06-01"]
 
@@ -138,7 +137,6 @@ charts:
     type: bar
     x: region
     y: revenue
-    color: region
     style: { number_format: "$,.0f" }
     sort: { by: revenue, order: desc }
     link: "/customers/?region={{ x }}"
@@ -149,7 +147,6 @@ charts:
     type: bar
     x: customer_type
     y: revenue
-    color: customer_type
     style: { number_format: "$,.0f" }
     sort: { by: revenue, order: desc }
     link: "/customers/?customer_type={{ x }}"
@@ -160,7 +157,6 @@ charts:
     type: bar
     x: customer_tier
     y: customers
-    color: customer_tier
     link: "/customers/?customer_tier={{ x }}"
 
   tickets_priority_bar:
@@ -169,7 +165,6 @@ charts:
     type: bar
     x: priority
     y: tickets
-    color: priority
 
   tickets_issue_bar:
     title: Support Tickets by Issue Type
@@ -177,7 +172,6 @@ charts:
     type: bar
     x: issue_type
     y: tickets
-    color: issue_type
     sort: { by: tickets, order: desc }
 
 rows:

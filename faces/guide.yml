@@ -62,6 +62,7 @@ charts:
     title: Monthly Revenue vs Target
     x: month
     y: revenue
+    style: { number_format: currency }
 
   revenue_bars:
     type: bar
@@ -69,6 +70,7 @@ charts:
     title: Revenue by Month
     x: month
     y: revenue
+    style: { number_format: currency }
 
   category_pie:
     type: pie
@@ -112,7 +114,6 @@ charts:
 # queries and use `WHERE category = '{{ segment }}'` to make them live.
 variables:
   segment:
-    label: Segment
     input: select
     default: All
     options:

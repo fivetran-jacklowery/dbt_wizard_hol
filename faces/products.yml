@@ -67,7 +67,6 @@ charts:
     query: by_category
     type: bar
     x: category_name
-    color: category_name
     y: revenue
     style: { number_format: currency }
     sort: { by: revenue, order: desc }
@@ -78,7 +77,6 @@ charts:
     query: by_brand
     type: bar
     x: brand
-    color: brand
     y: revenue
     style: { number_format: currency }
     sort: { by: revenue, order: desc }

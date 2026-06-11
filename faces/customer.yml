@@ -5,7 +5,6 @@ source: warehouse
 
 variables:
   customer_id:
-    label: Customer ID
     input: text          # populated from ?customer_id= on the link
     default: "406"
 

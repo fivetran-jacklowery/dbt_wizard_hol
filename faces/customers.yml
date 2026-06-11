@@ -92,7 +92,6 @@ charts:
     query: by_tier
     type: bar
     x: customer_tier
-    color: customer_tier
     y: customers
     link: "/customers/?customer_tier={{ x }}"
 
@@ -101,7 +100,6 @@ charts:
     query: by_region
     type: bar
     x: region
-    color: region
     y: lifetime_revenue
     style: { number_format: currency }
     sort: { by: lifetime_revenue, order: desc }
@@ -112,7 +110,6 @@ charts:
     query: by_type
     type: bar
     x: customer_type
-    color: customer_type
     y: lifetime_revenue
     style: { number_format: currency }
     sort: { by: lifetime_revenue, order: desc }

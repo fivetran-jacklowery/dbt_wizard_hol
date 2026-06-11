@@ -19,7 +19,6 @@ variables:
       query: state_options
       column: shipping_state
   customer_id:
-    label: Customer ID
     input: text
 
 queries:
