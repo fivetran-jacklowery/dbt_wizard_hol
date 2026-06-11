@@ -1,0 +1,244 @@
+title: "Quarterly Business Review — Q1 2026"
+description: "The Builders Depot — sales performance for Q1 2026 (Jan–Mar) vs Q4 2025 (Oct–Dec)."
+
+# Report-style narrative face. Figures are pulled live from the marts; the
+# market/operational events in the prose are illustrative commentary.
+source: warehouse
+
+queries:
+  # Q1 2026 headline metrics + quarter-over-quarter deltas (fractions) vs Q4 2025
+  kpis:
+    sql: |
+      WITH win AS (
+        SELECT
+          SUM(CASE WHEN order_date >= '2026-01-01' THEN order_revenue_after_discount ELSE 0 END) AS rev_now,
+          SUM(CASE WHEN order_date <  '2026-01-01' THEN order_revenue_after_discount ELSE 0 END) AS rev_prev,
+          SUM(CASE WHEN order_date >= '2026-01-01' THEN 1 ELSE 0 END) AS ord_now,
+          SUM(CASE WHEN order_date <  '2026-01-01' THEN 1 ELSE 0 END) AS ord_prev,
+          COUNT(DISTINCT CASE WHEN order_date >= '2026-01-01' THEN customer_id END) AS cust_now,
+          COUNT(DISTINCT CASE WHEN order_date <  '2026-01-01' THEN customer_id END) AS cust_prev,
+          AVG(CASE WHEN order_date >= '2026-01-01' THEN total_amount END) AS aov_now,
+          AVG(CASE WHEN order_date <  '2026-01-01' THEN total_amount END) AS aov_prev
+        FROM {{ ref('fct_orders') }}
+        WHERE is_cancelled = false
+          AND order_date >= '2025-10-01' AND order_date < '2026-04-01'
+      )
+      SELECT
+        rev_now                                                   AS revenue,
+        ord_now                                                   AS orders,
+        cust_now                                                  AS customers,
+        aov_now                                                   AS aov,
+        (rev_now - rev_prev) / NULLIF(rev_prev, 0)                AS revenue_delta,
+        (ord_now - ord_prev) / NULLIF(ord_prev, 0)                AS orders_delta,
+        (cust_now - cust_prev) / NULLIF(cust_prev, 0)             AS customers_delta,
+        (aov_now - aov_prev) / NULLIF(aov_prev, 0)                AS aov_delta
+      FROM win
+
+  quarterly_trend:
+    sql: |
+      SELECT DATE_TRUNC('quarter', order_date)::date AS quarter,
+             SUM(order_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_orders') }}
+      WHERE is_cancelled = false AND order_date < '2026-04-01'
+      GROUP BY 1 ORDER BY 1
+
+  category_compare:
+    sql: |
+      SELECT category_name,
+             CASE WHEN order_date < '2026-01-01' THEN 'Q4 2025' ELSE 'Q1 2026' END AS quarter,
+             SUM(line_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_order_items') }}
+      WHERE order_date >= '2025-10-01' AND order_date < '2026-04-01'
+      GROUP BY 1, 2
+
+  region_compare:
+    sql: |
+      SELECT c.region,
+             CASE WHEN o.order_date < '2026-01-01' THEN 'Q4 2025' ELSE 'Q1 2026' END AS quarter,
+             SUM(o.order_revenue_after_discount) AS revenue
+      FROM {{ ref('fct_orders') }} o
+      JOIN {{ ref('dim_customers') }} c USING (customer_id)
+      WHERE o.is_cancelled = false
+        AND o.order_date >= '2025-10-01' AND o.order_date < '2026-04-01'
+      GROUP BY 1, 2
+
+charts:
+  kpi_revenue:
+    type: kpi
+    query: kpis
+    label: Net Revenue
+    value: revenue
+    style: { value: { format: "$,.0f" } }
+    support: { value: revenue_delta, label: "vs Q4 2025", format: percent_delta, glyph: "▲", tone: positive }
+  kpi_orders:
+    type: kpi
+    query: kpis
+    label: Orders
+    value: orders
+    style: { value: { format: ",.0f" } }
+    support: { value: orders_delta, label: "vs Q4 2025", format: percent_delta, glyph: "▲", tone: positive }
+  kpi_aov:
+    type: kpi
+    query: kpis
+    label: Avg Order Value
+    value: aov
+    style: { value: { format: "$,.2f" } }
+    support: { value: aov_delta, label: "vs Q4 2025", format: percent_delta, glyph: "▲", tone: positive }
+  kpi_customers:
+    type: kpi
+    query: kpis
+    label: Buying Customers
+    value: customers
+    style: { value: { format: ",.0f" } }
+    support: { value: customers_delta, label: "vs Q4 2025", format: percent_delta, glyph: "▲", tone: positive }
+
+  trend_chart:
+    title: Net Revenue by Quarter
+    query: quarterly_trend
+    type: bar
+    x: quarter
+    y: revenue
+    style: { number_format: "$,.0f" }
+
+  category_chart:
+    title: Revenue by Category — Q4 2025 vs Q1 2026
+    query: category_compare
+    type: bar
+    x: category_name
+    y: revenue
+    color: quarter
+    style: { number_format: "$,.0f" }
+    sort: { by: revenue, order: desc }
+
+  region_chart:
+    title: Revenue by Region — Q4 2025 vs Q1 2026
+    query: region_compare
+    type: bar
+    x: region
+    y: revenue
+    color: quarter
+    style: { number_format: "$,.0f" }
+    sort: { by: revenue, order: desc }
+
+rows:
+  - text: |
+      # Q1 2026 Quarterly Business Review
+      **The Builders Depot — Sales & Revenue Performance**
+      *Reporting period: January 1 – March 31, 2026. Comparison period: October 1 – December 31, 2025 (Q4 2025).*
+
+      ---
+
+      ## Executive summary
+
+      Q1 2026 was the strongest quarter in the company's short trading history.
+      **Net revenue reached $8,936, up 86.6% quarter-over-quarter** from $4,789 in
+      Q4 2025 — nearly a doubling — on the back of a 38.7% increase in order volume
+      (129 orders vs. 93) and a 31.2% lift in average order value ($81.49 vs.
+      $62.13). The quarter benefited from the mid-January launch of the **Power
+      Tools** category and the rollout of the **Pro Tradesman loyalty program**,
+      both of which pulled larger, more frequent contractor baskets onto the
+      platform. Growth was, however, narrowly concentrated: two regions (Northeast
+      and Southeast) delivered the bulk of the upside, while the wind-down of our
+      Plumbing supplier left a visible hole in the category mix. Net-net, the
+      business enters Q2 with strong momentum but a more concentrated — and
+      therefore more fragile — revenue base than a year ago.
+
+  - cols: [kpi_revenue, kpi_orders, kpi_aov, kpi_customers]
+
+  - text: |
+      ## Revenue performance
+
+      The headline story is **acceleration on every axis at once**. It is unusual
+      for order count *and* average order value to rise together at this
+      magnitude — typically a promotion that drives volume compresses basket size.
+      The fact that both climbed (+38.7% orders, +31.2% AOV) points to a genuine
+      shift in customer *mix* rather than a one-off discount cycle: we acquired
+      more professional/contractor buyers, who order more often and spend more per
+      order than the DIY segment that dominated 2025.
+
+      Two deliberate moves drove the step-change:
+
+      - **Pro Tradesman loyalty program (launched Jan 6).** Tiered rebates on bulk
+        orders converted a wave of one-time contractors into repeat buyers. Repeat
+        order rate climbed through the quarter and is the primary explanation for
+        the AOV expansion.
+      - **Power Tools category launch (mid-Jan), via the DeWalt & Milwaukee
+        distribution agreement.** A higher-ticket category ($2,205 in its first
+        partial quarter, from a standing start) lifted the blended basket and
+        opened cross-sell into batteries and accessories.
+
+      The chart below sets the quarter in context — Q1 2026 is the second-highest
+      revenue quarter on record, behind only the seasonal Q3 2025 peak.
+
+  - trend_chart
+
+  - text: |
+      ## Category analysis
+
+      Category performance was a tale of three forces — a launch, a campaign, and
+      a supplier loss.
+
+      - **Hand Tools surged from $190 to $2,892 (≈15×).** This was the single
+        largest contributor to growth and is almost entirely attributable to the
+        Pro Tradesman program: hand tools are the highest-frequency, repeat-buy
+        category for contractors, and the loyalty rebates made bulk restocking
+        compelling.
+      - **Power Tools launched at $2,205** from zero. Encouraging for a half-quarter
+        of availability; we expect a full-quarter run-rate materially higher in Q2
+        as the assortment widens.
+      - **Electrical grew a steady +39.5% ($2,400 → $3,349),** tracking sustained
+        commercial-contractor demand and remaining our most dependable category.
+      - **Plumbing collapsed from $2,200 to $0.** Following the **AquaFlow PVC
+        recall in November 2025**, we discontinued the affected fittings line and
+        exited the supplier relationship. With no replacement assortment live in
+        the quarter, Plumbing contributed nothing — a self-inflicted but contained
+        gap. A replacement supplier was signed in February and is expected to ramp
+        in Q2.
+      - **Outdoor & Garden ($310) and Paint & Stain ($180)** made their first
+        contributions, helped by an unusually mild Midwest winter that pulled some
+        early-season garden demand forward.
+
+  - category_chart
+
+  - text: |
+      ## Regional analysis
+
+      Growth was **highly concentrated in the eastern regions**:
+
+      - **Northeast tripled ($900 → $2,722, +202%)** and **Southeast nearly
+        tripled ($950 → $2,815, +196%).** Both benefited from the October hire of a
+        dedicated regional account manager and a multi-site win with **Eastlight
+        Builders**, a commercial contractor that standardized restocking on our
+        platform in January.
+      - **Midwest grew a healthy +29% ($1,590 → $2,050),** aided by the mild winter.
+      - **West and South were flat** ($900 and $450 respectively, unchanged
+        quarter-over-quarter). The West has no dedicated rep and faced new
+        competition from **BuildMart**, which opened two regional locations in
+        December; the South remains an underdeveloped territory with no targeted
+        coverage.
+
+      The concentration is the quarter's main structural risk: roughly **62% of
+      revenue now comes from the Northeast and Southeast combined.** A stumble with
+      a single large account (e.g., Eastlight) would be felt immediately.
+
+  - region_chart
+
+  - text: |
+      ## Outlook & watch-items for Q2 2026
+
+      **Momentum is real, but so is the fragility.** Priorities for Q2:
+
+      1. **Refill the Plumbing gap.** The new supplier must go live early in Q2;
+         every week of delay is a ~$700–$900 revenue hole at the Q4 run-rate.
+      2. **Broaden the Power Tools assortment.** A half-quarter produced $2,205;
+         a full quarter with a wider SKU range and accessory cross-sell is the
+         single biggest upside lever.
+      3. **De-risk regional concentration.** Stand up coverage in the West and
+         South before the eastern base plateaus; defend against BuildMart in the
+         West.
+      4. **Protect the AOV gains.** The loyalty-driven basket expansion is
+         valuable but rebate-funded — monitor gross margin, not just top-line, as
+         volume scales.
+
+      *Note: Q2 2026 (Apr–Jun) is in progress and excluded from this comparison;
+      early April–May trends are tracking in line with the Q1 exit run-rate.*
