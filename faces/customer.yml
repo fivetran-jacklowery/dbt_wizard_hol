@@ -49,12 +49,13 @@ charts:
   kpi_tenure:  { type: kpi, query: profile, label: Tenure (days), value: customer_tenure_days, style: { value: { format: integer } } }
 
   spend_trend:
-    title: Spend Over Time
+    title: Spend Over Time — click to open this customer's orders
     query: monthly_spend
     type: bar
     x: order_month
     y: spend
     style: { number_format: currency }
+    link: "/orders/?customer_id={{ customer_id }}"
   orders_table:
     title: Orders — click a row to open the order
     query: orders
