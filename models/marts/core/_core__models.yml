@@ -192,6 +192,29 @@ models:
           - unique
           - not_null
 
+  - name: orders_by_week
+    description: >
+      Weekly order rollup — one row per calendar week. Includes order count,
+      gross line-item revenue, and distinct customers.
+    columns:
+      - name: order_week
+        description: First day of the calendar week (primary key).
+        tests:
+          - unique
+          - not_null
+      - name: order_count
+        description: Count of orders placed in the week.
+        tests:
+          - not_null
+      - name: gross_revenue
+        description: Total gross line-item revenue for orders placed in the week.
+        tests:
+          - not_null
+      - name: distinct_customers
+        description: Count of distinct customers who placed orders in the week.
+        tests:
+          - not_null
+
   - name: agg_product_performance
     description: >
       Product performance rankings by revenue, volume, and customer ratings.
