@@ -73,11 +73,14 @@ rm -rf target
 `git clean -fd` already removes any attendee-created (untracked) faces, and
 `git restore .` reverts edits to the committed baseline faces. Also clear the
 Dataface render/cache artifacts, which are gitignored and therefore survive a
-normal clean — this is what guarantees no stray dashboards or `.duckdb` caches
-carry over between attendees:
+normal clean — this is what guarantees no stray dashboards or cached query
+results carry over between attendees. Note `.dft/` (the `dft serve` query cache,
+on by default since dataface 0.1.5) lives at the project root, so clear it
+explicitly — otherwise the next attendee can see the previous attendee's cached
+board data:
 
 ```bash
-git clean -fdx faces renders 2>/dev/null || true
+git clean -fdx faces renders .dft 2>/dev/null || true
 git restore faces 2>/dev/null || true
 ```
 

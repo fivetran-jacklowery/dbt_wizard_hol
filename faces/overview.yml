@@ -91,7 +91,7 @@ queries:
       GROUP BY 1 ORDER BY tickets DESC
 
 charts:
-  kpi_revenue:   { type: kpi, query: kpis, label: Total Revenue, value: total_revenue, style: { value: { format: "$,.0f" } }, link: "/quarterly_review/" }
+  kpi_revenue:   { type: kpi, query: kpis, label: Total Revenue, value: total_revenue, style: { value: { format: "$,.0f" } }, link: "/revenue/" }
   kpi_orders:    { type: kpi, query: kpis, label: Orders, value: total_orders, style: { value: { format: ",.0f" } }, link: "/orders/" }
   kpi_aov:       { type: kpi, query: kpis, label: Avg Order Value, value: avg_order_value, style: { value: { format: "$,.2f" } }, link: "/orders/" }
   kpi_customers: { type: kpi, query: kpis, label: Buying Customers, value: buying_customers, style: { value: { format: ",.0f" } }, link: "/customers/" }
