@@ -9,7 +9,7 @@ source: warehouse
 variables:
   date_range:
     input: daterange
-    default: ["2025-03-01", "2026-06-01"]
+    # no default → picker starts empty; filter_date_range is null-safe (shows all)
 
 queries:
   kpis:
@@ -34,12 +34,13 @@ queries:
 
   orders_by_month:
     sql: |
-      SELECT order_month::date AS order_month, COUNT(*) AS orders
-      FROM {{ ref('fct_orders') }}
-      WHERE is_cancelled = false
-        AND order_month < DATE_TRUNC('month', CURRENT_DATE)
+      SELECT o.order_month::date AS order_month, c.customer_type, COUNT(*) AS orders
+      FROM {{ ref('fct_orders') }} o
+      JOIN {{ ref('dim_customers') }} c USING (customer_id)
+      WHERE o.is_cancelled = false
+        AND o.order_month < DATE_TRUNC('month', CURRENT_DATE)
         AND {{ filter_date_range('order_date', date_range) }}
-      GROUP BY 1 ORDER BY 1
+      GROUP BY 1, 2 ORDER BY 1
 
   revenue_by_category:
     sql: |
@@ -105,11 +106,13 @@ charts:
     link: "/orders/"
 
   orders_trend:
-    title: Orders by Month
+    title: Orders by Month — by customer type
     query: orders_by_month
     type: bar
     x: order_month
     y: orders
+    color: customer_type
+    style: { stack: zero }
     link: "/orders/"
 
   category_mix:
