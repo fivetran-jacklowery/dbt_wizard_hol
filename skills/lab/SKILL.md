@@ -169,7 +169,7 @@ Show me a dbt Chart of this new orders_by_week model.
 
 Exercises **dbt Charts (Dataface, `dft`)** end to end: the Wizard authors a
 `faces/*.yml`, wires queries to the mart via `{{ ref() }}` (so it resolves to
-the attendee's own schema), validates, then runs `dft serve` to open the
+the attendee's own schema), then runs `dft serve` to open the
 dashboard live in the browser — over the same Databricks data the lab just
 built.
 
@@ -189,6 +189,10 @@ revenue) over `order_week`, opened in the browser via `dft serve`. After it
 serves, name the payoff in one sentence: the weekly model they built earlier in
 the lab is now a live, interactive dashboard — defined in version-controlled
 YAML, with zero BI-tool setup.
+
+Do not run `dft validate`, dashboard review, or any other post-serve validation
+after `dft serve` succeeds. Once the dashboard is served, summarize the payoff
+and immediately show the next-prompt callout.
 
 After responding, end with:
 

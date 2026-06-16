@@ -43,6 +43,45 @@ Make sure the working branch is `hol_dbx`:
 git checkout hol_dbx
 ```
 
+Before fetching, make sure the GitHub SSH key is available. The setup script
+adds the key to the macOS keychain, but this retry path handles a fresh shell or
+a machine where the agent was not already primed. Do not print the passphrase:
+
+```bash
+ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+
+if ! git ls-remote origin hol_dbx >/dev/null 2>&1; then
+  lab_num="$(whoami | grep -o '[0-9]*')"
+  credentials_file="${HOL_LAB_CREDENTIALS_FILE:-$HOME/.hol_lab_credentials}"
+
+  if [ -f "$credentials_file" ]; then
+    # shellcheck disable=SC1090
+    . "$credentials_file"
+  fi
+
+  passphrase_var="HOL_USER_${lab_num}_SSH_PASSPHRASE"
+  ssh_key_passphrase="${!passphrase_var:-${SSH_KEY_PASSPHRASE:-labuser${lab_num}}}"
+
+  if [ -n "$ssh_key_passphrase" ]; then
+    askpass_dir="$(mktemp -d)"
+    askpass_script="$askpass_dir/askpass.sh"
+    cat > "$askpass_script" <<'BASH'
+#!/bin/bash
+printf '%s\n' "$SSH_KEY_PASSPHRASE"
+BASH
+    chmod 700 "$askpass_script"
+
+    eval "$(ssh-agent -s)" >/dev/null
+    SSH_KEY_PASSPHRASE="$ssh_key_passphrase" SSH_ASKPASS="$askpass_script" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh-add --apple-use-keychain ~/.ssh/id_ed25519 </dev/null 2>/dev/null \
+      || SSH_KEY_PASSPHRASE="$ssh_key_passphrase" SSH_ASKPASS="$askpass_script" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh-add ~/.ssh/id_ed25519 </dev/null 2>/dev/null \
+      || true
+    rm -rf "$askpass_dir"
+  else
+    ssh-add -q ~/.ssh/id_ed25519 2>/dev/null || true
+  fi
+fi
+```
+
 If `origin/hol_dbx` is available, update to it:
 
 ```bash
@@ -114,37 +153,10 @@ find skills -mindepth 2 -maxdepth 2 -name SKILL.md | sort
 
 If the result differs, stop and surface the mismatch. There should be no root-level `skills/SKILL.md`.
 
-Then check whether those skills are already installed in the Wizard user skills
-directory:
-
-```bash
-wizard_skills="${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills"
-missing=0
-
-for skill in install_dbt_charts lab lab_init; do
-  if [ ! -f "$wizard_skills/$skill/SKILL.md" ]; then
-    echo "Missing Wizard skill: $skill"
-    missing=1
-  fi
-done
-
-if [ "$missing" -eq 0 ]; then
-  echo "Wizard lab skills already present; skipping skill sync."
-fi
-```
-
-Expected if the skills are already installed:
-
-```text
-Wizard lab skills already present; skipping skill sync.
-```
-
-When the skip message appears, continue to step 4. These local lab skills are
-installed during setup and should not change during normal attendee resets.
-
-Only if one or more expected skills are missing, install/update the lab skills
-from this repo. Remove stale non-system skill entries, preserve `.system`, and
-install/update only `lab`, `lab_init`, and `install_dbt_charts`:
+Always install/update the lab skills from this repo so a pulled `hol_dbx`
+revision refreshes the active Wizard skill behavior too. Remove stale non-system
+skill entries, preserve `.system`, and install/update only `lab`, `lab_init`,
+and `install_dbt_charts`:
 
 ```bash
 python3 - <<'PY'
@@ -194,7 +206,7 @@ print('Wizard skills synced:', ', '.join(sorted(expected)))
 PY
 ```
 
-After installing missing skills, verify the installed non-system skills:
+After syncing skills, verify the installed non-system skills:
 
 ```bash
 find "${DBT_WIZARD_HOME:-$HOME/.dbt/wizard}/skills" -mindepth 1 -maxdepth 2 -name SKILL.md | grep -v '/.system/' | sort
